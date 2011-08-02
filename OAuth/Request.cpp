@@ -32,15 +32,18 @@
 #include <QRegExp>
 #include <QDateTime>
 #include <QStringList>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include "Util.h"
-#include "iostream"
 
 namespace OAuthNS {
 
     const QString Request::VERSION = QString("1.0");
+    QNetworkAccessManager *Request::_networkAccessManager = 0;
 
-    Request::Request(QString method, QString url, QMap<QString, QString> parameters, QObject *parent) :
-        QObject(parent), _method(method.toUpper()), _url(QUrl(url)), _parameters(parameters), _baseString()
+    Request::Request(Method method, QString url, QMap<QString, QString> parameters, QObject *parent) :
+        QObject(parent), _method(method), _url(QUrl(url)), _parameters(parameters), _baseString()
     {
         if (_url.hasQuery()) {
             for (int i = 0; i < _url.queryItems().length(); ++i) {
@@ -50,14 +53,20 @@ namespace OAuthNS {
                 }
             }
         }
+
+        QObject::connect(
+            getNetworkAccessManager(),
+            SIGNAL(finished(QNetworkReply*)),
+            SLOT(networkRequestFinished(QNetworkReply*))
+        );
     }
 
     /* static */
     Request* Request::fromConsumerAndToken(
                                             Consumer consumer,
                                             Token token,
-                                            QString method,
                                             QString url,
+                                            Method method,
                                             QMap<QString, QString> *parameters,
                                             QObject *parent)
     {
@@ -80,6 +89,33 @@ namespace OAuthNS {
         }
 
         return new Request(method, url, defaultParameters, parent);
+    }
+
+    /* static */
+    Request* Request::fromConsumer(
+                                    Consumer consumer,
+                                    QString url,
+                                    Method method,
+                                    QMap<QString, QString> *parameters,
+                                    QObject *parent)
+    {
+        return fromConsumerAndToken(
+                    consumer,
+                    Token(QString(""), QString("")),
+                    url,
+                    method,
+                    parameters,
+                    parent
+        );
+    }
+
+    /* static */
+    QNetworkAccessManager* Request::getNetworkAccessManager()
+    {
+        if (_networkAccessManager == 0) {
+            _networkAccessManager = new QNetworkAccessManager();
+        }
+        return _networkAccessManager;
     }
 
     /* static */
@@ -115,6 +151,13 @@ namespace OAuthNS {
         setParameter("oauth_signature", signature);
     }
 
+    void Request::signRequest(SignatureMethod *signatureMethod, Consumer consumer)
+    {
+        setParameter(QString("oauth_signature_method"), signatureMethod->getName());
+        QString signature = buildSignature(signatureMethod, consumer, Token(QString(""), QString("")));
+        setParameter("oauth_signature", signature);
+    }
+
     QString Request::toHeader()
     {
         QString header("OAuth ");
@@ -124,9 +167,9 @@ namespace OAuthNS {
             it.next();
             paramPairs.append(
                 QString(
-                    QUrl::toPercentEncoding(it.key())
+                    QString(it.key())
                         .append("=\"")
-                        .append(QUrl::toPercentEncoding(it.value()))
+                        .append(QString(it.value()))
                         .append("\"")
                 )
             );
@@ -160,7 +203,19 @@ namespace OAuthNS {
     QString Request::getSignatureBaseString()
     {
         QStringList parts;
-        parts.append(QString(QUrl::toPercentEncoding(_method)));
+
+        QString method;
+        switch (_method) {
+            case POST: method = QString("POST");
+                break;
+            case PUT: method = QString("PUT");
+                break;
+            case DELETE: method = QString("DELETE");
+                break;
+            default: method = QString("GET");
+        }
+
+        parts.append(QString(QUrl::toPercentEncoding(method)));
         parts.append(QString(QUrl::toPercentEncoding(getNormalizedHttpUrl())));
         parts.append(QString(QUrl::toPercentEncoding(getSignableParameters())));
         return parts.join(QString("&"));
@@ -187,8 +242,41 @@ namespace OAuthNS {
         _baseString = baseString;
     }
 
-    void Request::exec()
+    QNetworkReply* Request::exec()
     {
-        emit responseRecieved();
+        QNetworkRequest request(_url);
+        request.setRawHeader("Authorization", toHeader().toUtf8());
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "tex/xml");
+
+        QNetworkReply *reply = 0;
+
+        switch (_method) {
+            case POST: reply = getNetworkAccessManager()->post(request, toPostData().toUtf8());
+                break;
+            case PUT: reply = getNetworkAccessManager()->put(request, toPostData().toUtf8());
+                break;
+            case DELETE: reply = getNetworkAccessManager()->deleteResource(request);
+                break;
+            default: reply = getNetworkAccessManager()->get(request);
+        }
+
+        return reply;
+    }
+
+    void Request::networkRequestFinished(QNetworkReply *reply)
+    {
+        QVariant contentType = reply->header(QNetworkRequest::ContentTypeHeader);
+        QVariant *data = 0;
+
+        if (contentType.isValid()) {
+            if (contentType.toString().startsWith(QString("application/x-www-form-urlencoded"))) {
+                qDebug("content type is application/x-www-form-urlencoded");
+                QMap<QString, QString> params = Util::parseParameters(QString(reply->readAll()));
+                data = new QVariant(QVariant::Map, &params);
+            }
+        }
+
+        emit responseRecieved(data);
+        reply->deleteLater();
     }
 }

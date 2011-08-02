@@ -32,6 +32,8 @@
 #include <QObject>
 #include <QUrl>
 #include <QMap>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include "Consumer.h"
 #include "Token.h"
 #include "SignatureMethod.h"
@@ -41,13 +43,18 @@ namespace OAuthNS {
     class Request : public QObject
     {
         Q_OBJECT
+    public:
+        enum Method { GET, POST, PUT, DELETE };
+
     protected:
-        QString                 _method;
-        QUrl                    _url;
-        QMap<QString, QString>  _parameters;
-        QString                 _baseString;
+        Method                          _method;
+        QUrl                            _url;
+        QMap<QString, QString>          _parameters;
+        QString                         _baseString;
+        static QNetworkAccessManager    *_networkAccessManager;
 
     public:
+
         static const QString    VERSION;
 
         /**
@@ -57,7 +64,7 @@ namespace OAuthNS {
          * @param QMap<QString, QString> parameters
          * @param QObject *parent
          */
-        explicit Request(QString method, QString url, QMap<QString, QString> parameters, QObject *parent = 0);
+        explicit Request(Method method, QString url, QMap<QString, QString> parameters, QObject *parent = 0);
 
         /**
          *
@@ -72,10 +79,33 @@ namespace OAuthNS {
         static Request* fromConsumerAndToken(
                             Consumer consumer,
                             Token token,
-                            QString method,
                             QString url,
+                            Method method = GET,
                             QMap<QString, QString> *parameters = 0,
                             QObject *parent = 0);
+
+        /**
+         *
+         * @param Consumer consumer
+         * @param Token *token,
+         * @param QString method,
+         * @param QString url,
+         * @param QMap<QString, QString> parameters,
+         * @param QObject *parent = 0
+         * @return Request*
+         */
+        static Request* fromConsumer(
+                            Consumer consumer,
+                            QString url,
+                            Method method = GET,
+                            QMap<QString, QString> *parameters = 0,
+                            QObject *parent = 0);
+
+        /**
+         *
+         * @return QNetworkAccessManager*
+         */
+        static QNetworkAccessManager* getNetworkAccessManager();
 
         /**
          * Generates a unique identifier
@@ -117,6 +147,15 @@ namespace OAuthNS {
                             SignatureMethod *signatureMethod,
                             Consumer consumer,
                             Token token);
+
+        /**
+         *
+         * @param SignatureMethod *signatureMethod
+         * @param Consumer consumer
+         */
+        void            signRequest(
+                            SignatureMethod *signatureMethod,
+                            Consumer consumer);
 
         /**
          *
@@ -163,12 +202,13 @@ namespace OAuthNS {
         /**
          *
          */
-        void            exec();
+        QNetworkReply*  exec();
 
     signals:
-        void            responseRecieved();
+        void            responseRecieved(QVariant *data);
 
     public slots:
+        void networkRequestFinished(QNetworkReply *reply);
 
     };
 
