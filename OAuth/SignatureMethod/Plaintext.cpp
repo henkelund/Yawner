@@ -22,7 +22,7 @@
 * @package OAuth/SignatureMethod
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
-* @license http://www.gnu.org/licenses/lgpl.html GNU GPL
+* @license http://www.gnu.org/licenses/gpl.html GNU GPL
 * @link https://github.com/henkelund/Yawner
 */
 
