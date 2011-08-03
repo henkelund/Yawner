@@ -23,7 +23,7 @@
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/lgpl.html GNU GPL
-* @link http://yawner.henkehedelund.se/
+* @link https://github.com/henkelund/Yawner
 */
 
 #include "Token.h"
