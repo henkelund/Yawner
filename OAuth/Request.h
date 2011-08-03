@@ -37,6 +37,7 @@
 #include "Consumer.h"
 #include "Token.h"
 #include "SignatureMethod.h"
+#include "Response.h"
 
 namespace OAuthNS {
 
@@ -205,9 +206,21 @@ namespace OAuthNS {
         QNetworkReply*  exec();
 
     signals:
-        void            responseRecieved(QVariant *data);
+
+        /**
+         *
+         * @param Response *response
+         */
+        void            responseRecieved(
+            // 'OAuthNS' is explicitly stated here to enable connections from outside the namespace
+            OAuthNS::Response *response);
 
     public slots:
+
+        /**
+         *
+         * @param QNetworkReply *reply
+         */
         void networkRequestFinished(QNetworkReply *reply);
 
     };

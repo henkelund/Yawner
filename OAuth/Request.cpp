@@ -265,18 +265,7 @@ namespace OAuthNS {
 
     void Request::networkRequestFinished(QNetworkReply *reply)
     {
-        QVariant contentType = reply->header(QNetworkRequest::ContentTypeHeader);
-        QVariant *data = 0;
-
-        if (contentType.isValid()) {
-            if (contentType.toString().startsWith(QString("application/x-www-form-urlencoded"))) {
-                qDebug("content type is application/x-www-form-urlencoded");
-                QMap<QString, QString> params = Util::parseParameters(QString(reply->readAll()));
-                data = new QVariant(QVariant::Map, &params);
-            }
-        }
-
-        emit responseRecieved(data);
-        reply->deleteLater();
+        Response *response = new Response(reply);
+        emit responseRecieved(response);
     }
 }

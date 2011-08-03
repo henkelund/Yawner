@@ -18,44 +18,76 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category Yammer
-* @package Yammer
+* @category OAuth
+* @package OAuth
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/lgpl.html GNU GPL
 * @link http://yawner.henkehedelund.se/
 */
 
-#ifndef API_H
-#define API_H
+#ifndef RESPONSE_H
+#define RESPONSE_H
 
 #include <QObject>
-#include "../OAuth/Consumer.h"
-#include "../OAuth/Response.h"
+#include <QNetworkReply>
 
-namespace Yammer {
+namespace OAuthNS {
 
-    class Api : public QObject
+    class Response : public QObject
     {
         Q_OBJECT
+    public:
+
+        enum ContentType { PARAMS, XML, JSON, TEXT };
+
     protected:
-        OAuthNS::Consumer _consumer;
+
+        QNetworkReply   *_reply;
+        QString         _rawContent;
+        QVariant        _content;
 
     public:
-        explicit Api(OAuthNS::Consumer consumer, QObject *parent = 0);
 
-        void getRequestToken();
+        ContentType     _contentType;
 
-        void call(const char *method);
+        /**
+         *
+         * @param QNetworkReply *reply
+         * @param QObject *parent
+         */
+        explicit        Response(QNetworkReply *reply, QObject *parent = 0);
+
+        /**
+         *
+         * @return QNetworkReply*
+         */
+        QNetworkReply*  getReplyObject();
+
+        /**
+         *
+         * @return enum ContentType
+         */
+        int             getContentType();
+
+        /**
+         *
+         * @return QVariant
+         */
+        QString         getRawContent();
+
+        /**
+         *
+         * @return QVariant
+         */
+        QVariant        getContent();
 
     signals:
-        void requestTokenRecieved(QString token, QString secret);
 
     public slots:
-        void responseRecieved(OAuthNS::Response *response);
 
     };
 
 }
 
-#endif // API_H
+#endif // RESPONSE_H
