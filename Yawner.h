@@ -18,57 +18,64 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category OAuth
-* @package OAuth
+* @category Yawner
+* @package Yawner
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
 * @link https://github.com/henkelund/Yawner
 */
 
-#include "Token.h"
-#include <QUrl>
+#ifndef YAWNER_H
+#define YAWNER_H
 
-namespace OAuthNS {
+#include <QObject>
+#include <QDir>
+#include <QFile>
+#include <QSettings>
+#include "Yammer/Api.h"
+#include "OAuth/Consumer.h"
+#include "OAuth/Token.h"
 
-    Token::Token() :
-        _key(), _secret()
-    {
-    }
+class Yawner;
 
-    Token::Token(const QString key, const QString secret) :
-        _key(key), _secret(secret)
-    {
-    }
+#include "Yawner/Manager/UserManager.h"
 
-    Token::Token(const Token &token)
-    {
-        _key = token._key;
-        _secret = token._secret;
-    }
+class Yawner : public QObject
+{
+    Q_OBJECT
 
-    QString Token::getKey()
-    {
-        return _key;
-    }
+private:
 
-    QString Token::getSecret()
-    {
-        return _secret;
-    }
+    static Yawner *_instance;
+    QSettings *_settings;
+    YammerNS::Api *_yammerApi;
+    YawnerNS::ManagerNS::UserManager *_userManager;
 
-    QString Token::toParamString()
-    {
-        return
-            QString("oauth_token=")
-                .append(QUrl::toPercentEncoding(_key))
-                .append("&oauth_token_secret=")
-                .append(QUrl::toPercentEncoding(_secret));
-    }
+    explicit Yawner();
 
-    bool Token::isNull()
-    {
-        return _key.isEmpty() || _secret.isEmpty();
-    }
+public:
 
-}
+    ~Yawner();
+
+    static Yawner* getInstance();
+
+    YammerNS::Api* getYammerApi();
+
+    QSettings* getSettings();
+
+    QDir getYawnerDir();
+
+    OAuthNS::Consumer getConsumer();
+
+    void setConsumer(OAuthNS::Consumer consumer);
+
+    OAuthNS::Token getAccessToken();
+
+    void setAccessToken(OAuthNS::Token accessToken);
+
+    YawnerNS::ManagerNS::UserManager* getUserManager();
+
+};
+
+#endif // YAWNER_H

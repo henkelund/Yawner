@@ -30,22 +30,42 @@
 #define CONSUMER_H
 
 #include <QString>
+#include "Token.h"
 
 namespace OAuthNS {
 
-    class Consumer
+    class Consumer : public Token
     {
     protected:
-        QString _key;
-        QString _secret;
+
+        /**
+         * Currently unused
+         *
+         * @var QString _callbackUrl
+         */
         QString _callbackUrl;
 
     public:
-        explicit Consumer(const QString key, const QString secret);
-        Consumer(const Consumer &consumer);
 
-        QString getKey();
-        QString getSecret();
+        /**
+         * Constructor
+         */
+        explicit Consumer();
+
+        /**
+         * Constructor
+         *
+         * @param const QString key
+         * @param const QString secret
+         */
+        explicit Consumer(const QString key, const QString secret);
+
+        /**
+         * Copy constructor
+         *
+         * @param Consumer &consumer
+         */
+        Consumer(const Consumer &consumer);
     };
 
 }

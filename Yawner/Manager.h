@@ -18,57 +18,42 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category OAuth
-* @package OAuth
+* @category Yawner
+* @package Yawner
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
-* @link https://github.com/henkelund/Yawner
+* @link http://yawner.henkehedelund.se/
 */
 
-#include "Token.h"
-#include <QUrl>
+#ifndef MANAGER_H
+#define MANAGER_H
 
-namespace OAuthNS {
+#include <QObject>
+#include "../Yammer/Api.h"
 
-    Token::Token() :
-        _key(), _secret()
+class Yawner;
+
+namespace YawnerNS {
+
+    class Manager : public QObject
     {
-    }
+        Q_OBJECT
+    protected:
 
-    Token::Token(const QString key, const QString secret) :
-        _key(key), _secret(secret)
-    {
-    }
+        YammerNS::Api* _api();
 
-    Token::Token(const Token &token)
-    {
-        _key = token._key;
-        _secret = token._secret;
-    }
+        Yawner* _yawner();
 
-    QString Token::getKey()
-    {
-        return _key;
-    }
+    public:
+        explicit Manager(QObject *parent = 0);
 
-    QString Token::getSecret()
-    {
-        return _secret;
-    }
+    signals:
 
-    QString Token::toParamString()
-    {
-        return
-            QString("oauth_token=")
-                .append(QUrl::toPercentEncoding(_key))
-                .append("&oauth_token_secret=")
-                .append(QUrl::toPercentEncoding(_secret));
-    }
+    public slots:
 
-    bool Token::isNull()
-    {
-        return _key.isEmpty() || _secret.isEmpty();
-    }
+    };
 
 }
+
+#endif // MANAGER_H

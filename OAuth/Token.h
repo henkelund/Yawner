@@ -36,16 +36,69 @@ namespace OAuthNS {
     class Token
     {
     protected:
+
+        /**
+         * The token key
+         *
+         * @var QString _key
+         */
         QString _key;
+
+        /**
+         * The token secret
+         *
+         * @var QString _secret
+         */
         QString _secret;
 
     public:
+
+        /**
+         * Constructor
+         */
+        explicit Token();
+
+        /**
+         * Constructor
+         *
+         * @param const QString key
+         * @param const QString secret
+         */
         explicit Token(const QString key, const QString secret);
+
+        /**
+         * Copy constructor
+         *
+         * @param Token &token
+         */
         Token(const Token &token);
 
+        /**
+         * Getter for the key portion of this token
+         *
+         * @return QString
+         */
         QString getKey();
+
+        /**
+         * Getter for the secret portion of this token
+         *
+         * @return QString
+         */
         QString getSecret();
+
+        /**
+         * Returns a serialized url encoded string representing this token
+         *
+         * @return QString
+         */
         QString toParamString();
+
+        /**
+         *
+         * @param bool
+         */
+        bool isNull();
     };
 
 }

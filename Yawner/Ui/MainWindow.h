@@ -18,57 +18,51 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category OAuth
-* @package OAuth
+* @category Yawner/Ui
+* @package Yawner/Ui
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
-* @link https://github.com/henkelund/Yawner
+* @link http://yawner.henkehedelund.se/
 */
 
-#include "Token.h"
-#include <QUrl>
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-namespace OAuthNS {
+#include <QMainWindow>
+#include <QNetworkRequest>
+#include "Yawner.h"
+#include "Yammer/Api.h"
+#include "Yammer/Message.h"
+#include "OAuth/Token.h"
 
-    Token::Token() :
-        _key(), _secret()
-    {
-    }
-
-    Token::Token(const QString key, const QString secret) :
-        _key(key), _secret(secret)
-    {
-    }
-
-    Token::Token(const Token &token)
-    {
-        _key = token._key;
-        _secret = token._secret;
-    }
-
-    QString Token::getKey()
-    {
-        return _key;
-    }
-
-    QString Token::getSecret()
-    {
-        return _secret;
-    }
-
-    QString Token::toParamString()
-    {
-        return
-            QString("oauth_token=")
-                .append(QUrl::toPercentEncoding(_key))
-                .append("&oauth_token_secret=")
-                .append(QUrl::toPercentEncoding(_secret));
-    }
-
-    bool Token::isNull()
-    {
-        return _key.isEmpty() || _secret.isEmpty();
-    }
-
+namespace Ui {
+    class MainWindow;
 }
+
+namespace YawnerNS {
+    namespace UiNS {
+
+        class MainWindow : public QMainWindow
+        {
+            Q_OBJECT
+
+        public:
+            explicit MainWindow(QWidget *parent = 0);
+            ~MainWindow();
+
+        private:
+            Ui::MainWindow *_ui;
+            Yawner *_yawner;
+            YammerNS::Api *_api;
+
+        public slots:
+            void requestTokenRecieved(OAuthNS::Token token);
+            void accessTokenRecieved(OAuthNS::Token token);
+            void messagesRecieved(QList<YammerNS::Message*> messages);
+        };
+
+    }
+}
+
+#endif // MAINWINDOW_H

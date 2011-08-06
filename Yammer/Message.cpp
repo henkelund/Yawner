@@ -18,57 +18,55 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category OAuth
-* @package OAuth
+* @category Yammer
+* @package Yammer
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
-* @link https://github.com/henkelund/Yawner
+* @link http://yawner.henkehedelund.se/
 */
 
-#include "Token.h"
-#include <QUrl>
+#include "Message.h"
 
-namespace OAuthNS {
+namespace YammerNS {
 
-    Token::Token() :
-        _key(), _secret()
+    Message::Message(QObject *parent) :
+        QObject(parent), _id(0), _parentId(0), _text("")
     {
     }
 
-    Token::Token(const QString key, const QString secret) :
-        _key(key), _secret(secret)
+    int Message::getId()
     {
+        return _id;
     }
 
-    Token::Token(const Token &token)
+    int Message::getParentId()
     {
-        _key = token._key;
-        _secret = token._secret;
+        return _parentId;
     }
 
-    QString Token::getKey()
+    void Message::setText(QString text)
     {
-        return _key;
+        _text = text;
     }
 
-    QString Token::getSecret()
+    QString Message::getText()
     {
-        return _secret;
+        return _text;
     }
 
-    QString Token::toParamString()
+    bool Message::isComment()
     {
-        return
-            QString("oauth_token=")
-                .append(QUrl::toPercentEncoding(_key))
-                .append("&oauth_token_secret=")
-                .append(QUrl::toPercentEncoding(_secret));
+        return _parentId != 0;
     }
 
-    bool Token::isNull()
+    Message* Message::fromScriptValue(QScriptValue value, QObject *parent)
     {
-        return _key.isEmpty() || _secret.isEmpty();
+        Message *message = new Message(parent);
+        message->_id = value.property("id").toInteger();
+        message->_parentId = value.property("replied_to_id").toInteger();
+        message->_text = value.property("body").property("plain").toString();
+        return message;
     }
 
 }

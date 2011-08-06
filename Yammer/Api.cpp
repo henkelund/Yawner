@@ -29,16 +29,24 @@
 #include "Api.h"
 #include <QNetworkReply>
 #include <QUrl>
+#include <QScriptEngine>
+#include <QScriptValueIterator>
 #include "../OAuth/Consumer.h"
 #include "../OAuth/SignatureMethod/Plaintext.h"
 #include "../OAuth/Request.h"
 #include "../OAuth/Token.h"
+#include "../Yawner.h"
 
-namespace Yammer {
+namespace YammerNS {
 
     Api::Api(OAuthNS::Consumer consumer, QObject *parent) :
-        QObject(parent), _consumer(consumer)
+        QObject(parent), _consumer(consumer), _accessToken()
     {
+    }
+
+    void Api::setAccessToken(OAuthNS::Token token)
+    {
+        _accessToken = token;
     }
 
     void Api::getRequestToken()
@@ -54,7 +62,7 @@ namespace Yammer {
 
         // OAuthNS::Response will take ownership of the reply object
         QNetworkReply *reply = request->exec();
-        reply->setProperty("is_token_request", QVariant(true));
+        reply->setProperty("is_request_token_request", QVariant(true));
 
         // register callback
         QObject::connect(
@@ -64,19 +72,141 @@ namespace Yammer {
         );
     }
 
-    void Api::call(const char *method)
+    void Api::getAccessToken(OAuthNS::Token requestToken, QString verifyer)
     {
+        //create request
+        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
+            _consumer,
+            requestToken,
+            QString("https://www.yammer.com/oauth/access_token")
+        );
 
+        request->setParameter(QString("oauth_verifier"), verifyer);
+
+        OAuthNS::SignatureMethodNS::Plaintext sm;
+        request->signRequest(&sm, _consumer, requestToken);
+
+        // OAuthNS::Response will take ownership of the reply object
+        QNetworkReply *reply = request->exec();
+        reply->setProperty("is_access_token_request", QVariant(true));
+
+        // register callback
+        QObject::connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            SLOT(responseRecieved(OAuthNS::Response*))
+        );
+    }
+
+    void Api::messages()
+    {
+        //create request
+        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
+            _consumer,
+            _accessToken,
+            QString("https://www.yammer.com/api/v1/messages.json?threaded=true")
+        );
+
+        OAuthNS::SignatureMethodNS::Plaintext sm;
+        request->signRequest(&sm, _consumer, _accessToken);
+
+        // OAuthNS::Response will take ownership of the reply object
+        QNetworkReply *reply = request->exec();
+
+        // register callback
+        QObject::connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            SLOT(messagesRecieved(OAuthNS::Response*))
+        );
+    }
+
+    void Api::users()
+    {
+        //create request
+        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
+            _consumer,
+            _accessToken,
+            QString("https://www.yammer.com/api/v1/users.json")
+        );
+
+        OAuthNS::SignatureMethodNS::Plaintext sm;
+        request->signRequest(&sm, _consumer, _accessToken);
+
+        // OAuthNS::Response will take ownership of the reply object
+        QNetworkReply *reply = request->exec();
+
+        // register callback
+        QObject::connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            SLOT(usersRecieved(OAuthNS::Response*))
+        );
     }
 
     void Api::responseRecieved(OAuthNS::Response *response)
     {
-        if (response->getReplyObject()->property("is_token_request").isValid()) {
+        if (response->getReplyObject()->property("is_request_token_request").isValid()) {
 
             emit requestTokenRecieved(
-                response->property("oauth_token").toString(),
-                response->property("oauth_token_secret").toString()
+                OAuthNS::Token(
+                    response->property("oauth_token").toString(),
+                    response->property("oauth_token_secret").toString()
+                )
             );
         }
+        else if (response->getReplyObject()->property("is_access_token_request").isValid()) {
+
+            emit accessTokenRecieved(
+                OAuthNS::Token(
+                    response->property("oauth_token").toString(),
+                    response->property("oauth_token_secret").toString()
+                )
+            );
+        }
+        else if (response->getReplyObject()->property("is_call_request").isValid()) {
+
+            qDebug(response->getRawContent().toStdString().c_str());
+        }
+
+        response->deleteLater();
+    }
+
+    void Api::messagesRecieved(OAuthNS::Response *response)
+    {
+        /*QDir dir = Yawner::getYawnerDir();
+        QFile file(dir.absoluteFilePath(QString("messages.json")));
+        file.open(QFile::WriteOnly);
+        file.write(response->getRawContent().toUtf8());
+        file.close();*/
+
+        QScriptValue sc;
+        QScriptEngine engine;
+        sc = engine.evaluate("(" + response->getRawContent() + ")");
+
+        QList<Message*> messages;
+
+        if (sc.property("messages").isArray()) {
+            QScriptValueIterator it(sc.property("messages"));
+            while (it.hasNext()) {
+                it.next();
+                if (!it.value().isObject())
+                    continue;
+
+                Message *message = Message::fromScriptValue(it.value());
+                messages.append(message);
+            }
+        }
+
+        emit messagesRecieved(messages);
+    }
+
+    void Api::usersRecieved(OAuthNS::Response *response)
+    {
+        /*QDir dir = Yawner::getYawnerDir();
+        QFile file(dir.absoluteFilePath(QString("users.json")));
+        file.open(QFile::WriteOnly);
+        file.write(response->getRawContent().toUtf8());
+        file.close();*/
     }
 }

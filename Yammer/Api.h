@@ -31,28 +31,40 @@
 
 #include <QObject>
 #include "../OAuth/Consumer.h"
+#include "../OAuth/Token.h"
 #include "../OAuth/Response.h"
+#include "Message.h"
 
-namespace Yammer {
+namespace YammerNS {
 
     class Api : public QObject
     {
         Q_OBJECT
     protected:
         OAuthNS::Consumer _consumer;
+        OAuthNS::Token _accessToken;
 
     public:
         explicit Api(OAuthNS::Consumer consumer, QObject *parent = 0);
 
+        void setAccessToken(OAuthNS::Token token);
+
         void getRequestToken();
 
-        void call(const char *method);
+        void getAccessToken(OAuthNS::Token requestToken, QString verifyer);
+
+        void messages();
+        void users();
 
     signals:
-        void requestTokenRecieved(QString token, QString secret);
+        void requestTokenRecieved(OAuthNS::Token token);
+        void accessTokenRecieved(OAuthNS::Token token);
+        void messagesRecieved(QList<YammerNS::Message*> messages);
 
     public slots:
         void responseRecieved(OAuthNS::Response *response);
+        void messagesRecieved(OAuthNS::Response *response);
+        void usersRecieved(OAuthNS::Response *response);
 
     };
 

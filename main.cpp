@@ -18,31 +18,21 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category OAuth
-* @package OAuth
+* @category Yawner
+* @package Yawner
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
-* @license http://www.gnu.org/licenses/gpl.html GNU GPL
-* @link https://github.com/henkelund/Yawner
+* @license http://www.gnu.org/licenses/lgpl.html GNU GPL
+* @link http://yawner.henkehedelund.se/
 */
 
-#include "Consumer.h"
+#include <QtGui/QApplication>
+#include "Yawner/Ui/MainWindow.h"
 
-namespace OAuthNS {
-
-    Consumer::Consumer() :
-        Token(), _callbackUrl("")
-    {
-    }
-
-    Consumer::Consumer(const QString key, const QString secret) :
-        Token(key, secret), _callbackUrl("")
-    {
-    }
-
-    Consumer::Consumer(const Consumer &consumer) :
-        Token(consumer)
-    {
-        _callbackUrl = consumer._callbackUrl;
-    }
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    YawnerNS::UiNS::MainWindow w;
+    w.show();
+    return a.exec();
 }

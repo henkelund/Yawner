@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+     <file>icon.svg</file>
+     <file>icon16.png</file>
+     <file>icon32.png</file>
+     <file>icon96.png</file>
+ </qresource>
+ </RCC>
