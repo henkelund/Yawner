@@ -98,29 +98,6 @@ namespace YammerNS {
         );
     }
 
-    void Api::messages()
-    {
-        //create request
-        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
-            _consumer,
-            _accessToken,
-            QString("https://www.yammer.com/api/v1/messages.json?threaded=true")
-        );
-
-        OAuthNS::SignatureMethodNS::Plaintext sm;
-        request->signRequest(&sm, _consumer, _accessToken);
-
-        // OAuthNS::Response will take ownership of the reply object
-        QNetworkReply *reply = request->exec();
-
-        // register callback
-        QObject::connect(
-            request,
-            SIGNAL(responseRecieved(OAuthNS::Response*)),
-            SLOT(messagesRecieved(OAuthNS::Response*))
-        );
-    }
-
     void Api::users()
     {
         //create request
@@ -142,6 +119,31 @@ namespace YammerNS {
             SIGNAL(responseRecieved(OAuthNS::Response*)),
             SLOT(usersRecieved(OAuthNS::Response*))
         );
+    }
+
+    OAuthNS::Request* Api::get(const char* resource, QObject *receiverObject, const char* recieverMethod)
+    {
+        //create request
+        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
+            _consumer,
+            _accessToken,
+            QString(resource)
+        );
+
+        OAuthNS::SignatureMethodNS::Plaintext sm;
+        request->signRequest(&sm, _consumer, _accessToken);
+        // OAuthNS::Response will take ownership of the reply object
+        QNetworkReply *reply = request->exec();
+
+        // register callback
+        connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            receiverObject,
+            recieverMethod
+        );
+
+        return request;
     }
 
     void Api::responseRecieved(OAuthNS::Response *response)
@@ -172,41 +174,37 @@ namespace YammerNS {
         response->deleteLater();
     }
 
-    void Api::messagesRecieved(OAuthNS::Response *response)
+    void Api::usersRecieved(OAuthNS::Response *response)
     {
-        /*QDir dir = Yawner::getYawnerDir();
-        QFile file(dir.absoluteFilePath(QString("messages.json")));
-        file.open(QFile::WriteOnly);
-        file.write(response->getRawContent().toUtf8());
-        file.close();*/
-
         QScriptValue sc;
         QScriptEngine engine;
         sc = engine.evaluate("(" + response->getRawContent() + ")");
 
-        QList<Message*> messages;
-
-        if (sc.property("messages").isArray()) {
-            QScriptValueIterator it(sc.property("messages"));
+        if (sc.isArray()) {
+            QScriptValueIterator it(sc);
             while (it.hasNext()) {
                 it.next();
                 if (!it.value().isObject())
                     continue;
 
-                Message *message = Message::fromScriptValue(it.value());
-                messages.append(message);
+                if (it.value().property(QString("id")).isNumber()) {
+                    QString filename = QString("%1.user.json").arg(it.value().property(QString("id")).toString());
+                    QDir dir = Yawner::getInstance()->getYawnerDir();
+                    QFile file(dir.absoluteFilePath(filename));
+
+                    QScriptValue args = engine.newArray();
+                    args.setProperty(0, it.value());
+
+                    QString stringified =
+                        engine.evaluate(QString("JSON.stringify"))
+                            .call(engine.globalObject(), args)
+                                .toString();
+
+                    file.open(QFile::WriteOnly);
+                    file.write(stringified.toUtf8());
+                    file.close();
+                }
             }
         }
-
-        emit messagesRecieved(messages);
-    }
-
-    void Api::usersRecieved(OAuthNS::Response *response)
-    {
-        /*QDir dir = Yawner::getYawnerDir();
-        QFile file(dir.absoluteFilePath(QString("users.json")));
-        file.open(QFile::WriteOnly);
-        file.write(response->getRawContent().toUtf8());
-        file.close();*/
     }
 }

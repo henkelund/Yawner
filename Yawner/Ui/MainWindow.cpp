@@ -31,6 +31,7 @@
 
 #include <QInputDialog>
 #include <QDesktopServices>
+#include <QTimer>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
@@ -44,6 +45,11 @@ namespace YawnerNS {
             _ui(new Ui::MainWindow),
             _yawner(Yawner::getInstance())
         {
+            _ui->setupUi(this);
+
+            _ui->centralWidget->setStyleSheet(QString(
+                "QScrollBar { width: 4px; } QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; } QScrollBar::add-page, QScrollBar::sub-page { background: transparent; } QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; }"
+            ));
 
             OAuthNS::Consumer consumer = _yawner->getConsumer();
 
@@ -64,27 +70,25 @@ namespace YawnerNS {
                 _yawner->setConsumer(consumer);
             }
 
-            _ui->setupUi(this);
-
-            _api = new YammerNS::Api(consumer, this);
-
             OAuthNS::Token accessToken = _yawner->getAccessToken();
             if (accessToken.isNull()) {
-                _api->getRequestToken();
+                _yawner->getYammerApi()->getRequestToken();
 
                 QObject::connect(
-                    _api,
+                    _yawner->getYammerApi(),
                     SIGNAL(requestTokenRecieved(OAuthNS::Token)),
                     SLOT(requestTokenRecieved(OAuthNS::Token))
                 );
             }
             else {
-                _api->setAccessToken(accessToken);
-                _api->messages();
-                QObject::connect(_api, SIGNAL(messagesRecieved(QList<YammerNS::Message*>)), SLOT(messagesRecieved(QList<YammerNS::Message*>)));
+                _yawner->getYammerApi()->setAccessToken(accessToken);
+                _yawner->getMessageManager();
+                connect(
+                    _yawner->getMessageManager(),
+                    SIGNAL(newMessagesLoaded(QList<int>)),
+                    SLOT(newMessagesLoaded(QList<int>))
+                );
             }
-
-            //_api->users();
         }
 
         MainWindow::~MainWindow()
@@ -101,9 +105,9 @@ namespace YawnerNS {
                 QInputDialog pinDialog;
                 pinDialog.setLabelText(QString("Please enter pin"));
                 pinDialog.exec();
-                _api->getAccessToken(token, pinDialog.textValue());
+                _yawner->getYammerApi()->getAccessToken(token, pinDialog.textValue());
                 QObject::connect(
-                    _api,
+                    _yawner->getYammerApi(),
                     SIGNAL(accessTokenRecieved(OAuthNS::Token)),
                     SLOT(accessTokenRecieved(OAuthNS::Token))
                 );
@@ -114,17 +118,19 @@ namespace YawnerNS {
         {
             if (!token.isNull()) {
                 _yawner->setAccessToken(token);
-                _api->setAccessToken(token);
+                _yawner->getYammerApi()->setAccessToken(token);
             }
         }
 
-        void MainWindow::messagesRecieved(QList<YammerNS::Message*> messages)
+        void MainWindow::newMessagesLoaded(QList<int> messageIds)
         {
-            QListIterator<YammerNS::Message*> it(messages);
+            QListIterator<int> it(messageIds);
             while (it.hasNext()) {
-                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(it.next(), _ui->messageList);
+                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(
+                            _yawner->getMessageManager()->getMessageById(it.next()), _ui->messageList);
                 _ui->messageList->layout()->addWidget(mWidget);
             }
+            update();
         }
 
     }

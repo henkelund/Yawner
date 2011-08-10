@@ -54,12 +54,11 @@ namespace YawnerNS {
         private:
             Ui::MainWindow *_ui;
             Yawner *_yawner;
-            YammerNS::Api *_api;
 
         public slots:
             void requestTokenRecieved(OAuthNS::Token token);
             void accessTokenRecieved(OAuthNS::Token token);
-            void messagesRecieved(QList<YammerNS::Message*> messages);
+            void newMessagesLoaded(QList<int> messageIds);
         };
 
     }

@@ -27,12 +27,65 @@
 */
 
 #include "User.h"
+#include <QVariant>
+#include <QFile>
+#include "Yawner.h"
 
 namespace YammerNS {
 
+    QPixmap* User::_defaultSmallImage = 0;
+
     User::User(QObject *parent) :
-        QObject(parent)
+        Abstract(parent), _smallImage(0)
     {
+    }
+
+    User::~User()
+    {
+        if (_smallImage != 0) {
+            delete _smallImage;
+        }
+    }
+
+    void User::cleanUp()
+    {
+        if (_defaultSmallImage != 0) {
+            delete _defaultSmallImage;
+            _defaultSmallImage = 0;
+        }
+    }
+
+    int User::getId()
+    {
+        return _data.value(QString("id"), QVariant(0)).toInt();
+    }
+
+    QPixmap User::getSmallImage()
+    {
+        if (_smallImage == 0) {
+            // load from file
+            QFile imageFile(
+                Yawner::getInstance()
+                ->getYawnerDir().
+                absoluteFilePath(
+                    QString("%1.user.jpg")
+                        .arg(QString::number(getId()))
+                )
+            );
+
+            if (imageFile.exists()) {
+                _smallImage = new QPixmap(imageFile.fileName());
+            }
+            else {
+                // if not found download from mugshot_url
+                // while waiting for download -> return default image
+                if (_defaultSmallImage == 0) {
+                    _defaultSmallImage = new QPixmap(QString(":/icon.svg"));
+                }
+                return *_defaultSmallImage;
+            }
+        }
+        return *_smallImage;
     }
 
 }

@@ -27,46 +27,52 @@
 */
 
 #include "Message.h"
+#include "Yawner.h"
 
 namespace YammerNS {
 
     Message::Message(QObject *parent) :
-        QObject(parent), _id(0), _parentId(0), _text("")
+        Abstract(parent)
     {
+    }
+
+    bool Message::_beforeLoad(QVariantMap *data)
+    {
+        if (data->value(QString("id")).toInt() <= 0) {
+            qDebug(QString("No message ID").toStdString().c_str());
+            return false;
+        }
+        return true;
     }
 
     int Message::getId()
     {
-        return _id;
+        return getData(QString("id")).toInt();
     }
 
     int Message::getParentId()
     {
-        return _parentId;
-    }
-
-    void Message::setText(QString text)
-    {
-        _text = text;
+        return getData(QString("replied_to_id")).toInt();
     }
 
     QString Message::getText()
     {
-        return _text;
+        return getData(QString("body")).toMap().value(QString("plain")).toString();
+    }
+
+    User* Message::getUser()
+    {
+        return
+            Yawner::getInstance()
+                ->getUserManager()
+                ->getUserById(
+                    getData(QString("sender_id")).toInt()
+                );
     }
 
     bool Message::isComment()
     {
-        return _parentId != 0;
-    }
-
-    Message* Message::fromScriptValue(QScriptValue value, QObject *parent)
-    {
-        Message *message = new Message(parent);
-        message->_id = value.property("id").toInteger();
-        message->_parentId = value.property("replied_to_id").toInteger();
-        message->_text = value.property("body").property("plain").toString();
-        return message;
+        return getParentId() != 0;
     }
 
 }

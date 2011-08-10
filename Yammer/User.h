@@ -29,15 +29,31 @@
 #ifndef USER_H
 #define USER_H
 
+#include "Abstract.h"
 #include <QObject>
+#include <QScriptValue>
+#include <QPixmap>
 
 namespace YammerNS {
 
-    class User : public QObject
+    class User : public Abstract
     {
         Q_OBJECT
+
+    protected:
+        QPixmap *_smallImage;
+        static QPixmap *_defaultSmallImage;
+
     public:
         explicit User(QObject *parent = 0);
+
+        virtual ~User();
+
+        static void cleanUp();
+
+        int getId();
+
+        QPixmap getSmallImage();
 
     signals:
 

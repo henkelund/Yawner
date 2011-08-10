@@ -25,7 +25,10 @@ SOURCES += main.cpp\
     Yammer/Message/Thread.cpp \
     Yammer/User.cpp \
     Yawner/Manager.cpp \
-    Yawner/Manager/UserManager.cpp
+    Yawner/Manager/UserManager.cpp \
+    Yammer/Abstract.cpp \
+    Yawner/Ui/MessageText.cpp \
+    Yawner/Manager/MessageManager.cpp
 
 HEADERS  += Yawner/Ui/MainWindow.h \
     OAuth/Consumer.h \
@@ -42,7 +45,10 @@ HEADERS  += Yawner/Ui/MainWindow.h \
     Yammer/Message/Thread.h \
     Yammer/User.h \
     Yawner/Manager.h \
-    Yawner/Manager/UserManager.h
+    Yawner/Manager/UserManager.h \
+    Yammer/Abstract.h \
+    Yawner/Ui/MessageText.h \
+    Yawner/Manager/MessageManager.h
 
 FORMS    += Yawner/Ui/mainwindow.ui \
     Yawner/Ui/messagewidget.ui

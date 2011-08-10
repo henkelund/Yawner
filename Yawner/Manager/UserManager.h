@@ -30,21 +30,37 @@
 #define USERMANAGER_H
 
 #include "../Manager.h"
+#include "../../Yammer/User.h"
+#include "../../OAuth/Response.h"
 
 namespace YawnerNS {
-
     namespace ManagerNS {
 
         class UserManager : public YawnerNS::Manager
         {
             Q_OBJECT
 
+        protected:
+
+            bool _isLoaded;
+            QMap<int, YammerNS::User*> _userIndex;
+
+            void _assertLoaded();
+
         public:
+
             explicit UserManager(QObject *parent);
+
+            void init();
+
+            void load();
+
+            YammerNS::User* getUserById(int id);
 
         signals:
 
         public slots:
+            void userRecieved(OAuthNS::Response* response);
 
         };
 

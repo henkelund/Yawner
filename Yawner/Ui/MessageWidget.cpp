@@ -27,8 +27,11 @@
 */
 
 #include "MessageWidget.h"
+#include "MessageText.h"
 #include "ui_messagewidget.h"
 #include <QListIterator>
+#include <QScrollBar>
+#include "Yammer/User.h"
 
 namespace YawnerNS {
     namespace UiNS {
@@ -38,8 +41,18 @@ namespace YawnerNS {
             _ui(new Ui::MessageWidget)
         {
             _ui->setupUi(this);
-            _message->setParent(this);
+            /*_ui->message->setStyleSheet(QString(
+                "QScrollBar::add-page, QScrollBar::sub-page { background: #008B9E; } QScrollBar::handle { border-radius: 4px; border: 0; background: #FF5800; }"
+            ));*/
+            //_message->setParent(this);
             _ui->message->setText(_message->getText());
+            //_ui->message->setText(QString("Lorem Ipsum"));
+
+            YammerNS::User* user = _message->getUser();
+            if (user != 0) {
+                _ui->name->setText(user->getData("full_name").toString().replace(QString(" "), QString("\n")));
+                _ui->avatar->setPixmap(user->getSmallImage());
+            }
         }
 
         MessageWidget::~MessageWidget()

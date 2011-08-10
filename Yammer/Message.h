@@ -31,29 +31,27 @@
 
 #include <QObject>
 #include <QScriptValue>
+#include "Abstract.h"
+#include "User.h"
 
 namespace YammerNS {
 
-    class Message : public QObject
+    class Message : public Abstract
     {
         Q_OBJECT
     protected:
-        int _id;
-        int _parentId;
-        QString _text;
+        virtual bool _beforeLoad(QVariantMap *data);
 
     public:
         explicit Message(QObject *parent = 0);
-
-        static Message* fromScriptValue(QScriptValue value, QObject *parent = 0);
 
         int getId();
 
         int getParentId();
 
-        void setText(QString text);
-
         QString getText();
+
+        User* getUser();
 
         bool isComment();
 

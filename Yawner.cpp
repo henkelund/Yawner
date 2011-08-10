@@ -36,7 +36,7 @@ Yawner::Yawner() :
     QObject(0),
     _settings(new QSettings(QString("Yawner"), QString("Yawner"), this)),
     _yammerApi(0),
-    _userManager(new YawnerNS::ManagerNS::UserManager(this))
+    _userManager(0)
 {
     _yammerApi = new YammerNS::Api(getConsumer(), this);
 }
@@ -108,5 +108,29 @@ void Yawner::setAccessToken(OAuthNS::Token accessToken)
 
 YawnerNS::ManagerNS::UserManager* Yawner::getUserManager()
 {
+    if (_userManager == 0) {
+        _userManager = new YawnerNS::ManagerNS::UserManager(this);
+        _userManager->init();
+    }
     return _userManager;
+}
+
+YawnerNS::ManagerNS::MessageManager* Yawner::getMessageManager()
+{
+    if (_messageManager == 0) {
+        _messageManager = new YawnerNS::ManagerNS::MessageManager(this);
+        _messageManager->init();
+    }
+    return _messageManager;
+}
+
+QString Yawner::getFileContents(QString filename)
+{
+    QFile file(getYawnerDir().absoluteFilePath(filename));
+    if (file.exists() && file.open(QFile::ReadOnly)) {
+        QString contents(file.readAll());
+        file.close();
+        return contents;
+    }
+    return QString(); // return null string
 }

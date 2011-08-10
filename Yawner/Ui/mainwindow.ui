@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
-    <height>386</height>
+    <width>255</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Yawner - Yammer Desktop Client</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="assets/yawner.qrc">
+   <iconset resource="../../assets/yawner.qrc">
     <normaloff>:/icon.svg</normaloff>:/icon.svg</iconset>
   </property>
   <property name="iconSize">
@@ -25,8 +25,19 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QScrollArea" name="scrollArea">
+      <property name="styleSheet">
+       <string notr="true">font: 75 11pt;
+color: rgb(36, 36, 36);
+background-color: rgb(0, 139, 158);</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
       <property name="horizontalScrollBarPolicy">
        <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
@@ -41,8 +52,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>430</width>
-         <height>319</height>
+         <width>255</width>
+         <height>479</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2"/>
@@ -56,16 +67,15 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>450</width>
+     <width>255</width>
      <height>25</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="assets/yawner.qrc"/>
+  <include location="../../assets/yawner.qrc"/>
  </resources>
  <connections/>
 </ui>

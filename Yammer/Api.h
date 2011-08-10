@@ -33,6 +33,7 @@
 #include "../OAuth/Consumer.h"
 #include "../OAuth/Token.h"
 #include "../OAuth/Response.h"
+#include "../OAuth/Request.h"
 #include "Message.h"
 
 namespace YammerNS {
@@ -53,17 +54,16 @@ namespace YammerNS {
 
         void getAccessToken(OAuthNS::Token requestToken, QString verifyer);
 
-        void messages();
         void users();
+
+        OAuthNS::Request* get(const char* resource, QObject* recieverObject, const char* recieverMethod);
 
     signals:
         void requestTokenRecieved(OAuthNS::Token token);
         void accessTokenRecieved(OAuthNS::Token token);
-        void messagesRecieved(QList<YammerNS::Message*> messages);
 
     public slots:
         void responseRecieved(OAuthNS::Response *response);
-        void messagesRecieved(OAuthNS::Response *response);
         void usersRecieved(OAuthNS::Response *response);
 
     };

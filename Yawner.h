@@ -40,6 +40,7 @@
 class Yawner;
 
 #include "Yawner/Manager/UserManager.h"
+#include "Yawner/Manager/MessageManager.h"
 
 class Yawner : public QObject
 {
@@ -51,6 +52,7 @@ private:
     QSettings *_settings;
     YammerNS::Api *_yammerApi;
     YawnerNS::ManagerNS::UserManager *_userManager;
+    YawnerNS::ManagerNS::MessageManager *_messageManager;
 
     explicit Yawner();
 
@@ -75,6 +77,10 @@ public:
     void setAccessToken(OAuthNS::Token accessToken);
 
     YawnerNS::ManagerNS::UserManager* getUserManager();
+
+    YawnerNS::ManagerNS::MessageManager* getMessageManager();
+
+    QString getFileContents(QString filename);
 
 };
 
