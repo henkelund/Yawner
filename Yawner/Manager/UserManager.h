@@ -55,12 +55,14 @@ namespace YawnerNS {
 
             void load();
 
-            YammerNS::User* getUserById(int id);
+            YammerNS::User* getUserById(int id, bool *created = 0);
 
         signals:
+            void newUsersLoaded(QList<int> newUserIds);
 
         public slots:
-            void userRecieved(OAuthNS::Response* response);
+            void fetchUsers();
+            void usersRecieved(OAuthNS::Response* response);
 
         };
 

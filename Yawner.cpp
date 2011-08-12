@@ -35,8 +35,7 @@ Yawner* Yawner::_instance = 0;
 Yawner::Yawner() :
     QObject(0),
     _settings(new QSettings(QString("Yawner"), QString("Yawner"), this)),
-    _yammerApi(0),
-    _userManager(0)
+    _yammerApi(0), _messageManager(0), _userManager(0)
 {
     _yammerApi = new YammerNS::Api(getConsumer(), this);
 }

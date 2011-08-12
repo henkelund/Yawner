@@ -54,8 +54,6 @@ namespace YammerNS {
 
         void getAccessToken(OAuthNS::Token requestToken, QString verifyer);
 
-        void users();
-
         OAuthNS::Request* get(const char* resource, QObject* recieverObject, const char* recieverMethod);
 
     signals:
@@ -64,8 +62,6 @@ namespace YammerNS {
 
     public slots:
         void responseRecieved(OAuthNS::Response *response);
-        void usersRecieved(OAuthNS::Response *response);
-
     };
 
 }

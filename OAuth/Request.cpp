@@ -43,7 +43,7 @@ namespace OAuthNS {
     QNetworkAccessManager *Request::_networkAccessManager = 0;
 
     Request::Request(Method method, QString url, QMap<QString, QString> parameters, QObject *parent) :
-        QObject(parent), _method(method), _url(QUrl(url)), _parameters(parameters), _baseString()
+        QObject(parent), _method(method), _url(QUrl(url)), _parameters(parameters), _baseString(), _reply(0)
     {
         if (_url.hasQuery()) {
             for (int i = 0; i < _url.queryItems().length(); ++i) {
@@ -53,12 +53,6 @@ namespace OAuthNS {
                 }
             }
         }
-
-        QObject::connect(
-            getNetworkAccessManager(),
-            SIGNAL(finished(QNetworkReply*)),
-            SLOT(networkRequestFinished(QNetworkReply*))
-        );
     }
 
     /* static */
@@ -248,24 +242,46 @@ namespace OAuthNS {
         request.setRawHeader("Authorization", toHeader().toUtf8());
         request.setHeader(QNetworkRequest::ContentTypeHeader, "tex/xml");
 
-        QNetworkReply *reply = 0;
-
-        switch (_method) {
-            case POST: reply = getNetworkAccessManager()->post(request, toPostData().toUtf8());
-                break;
-            case PUT: reply = getNetworkAccessManager()->put(request, toPostData().toUtf8());
-                break;
-            case DELETE: reply = getNetworkAccessManager()->deleteResource(request);
-                break;
-            default: reply = getNetworkAccessManager()->get(request);
+        if (_reply != 0 && _reply->parent() == this) {
+            delete _reply;
+            _reply = 0;
         }
 
-        return reply;
+        switch (_method) {
+            case POST: _reply = getNetworkAccessManager()->post(request, toPostData().toUtf8());
+                break;
+            case PUT: _reply = getNetworkAccessManager()->put(request, toPostData().toUtf8());
+                break;
+            case DELETE: _reply = getNetworkAccessManager()->deleteResource(request);
+                break;
+            default: _reply = getNetworkAccessManager()->get(request);
+        }
+
+        connect(_reply, SIGNAL(finished()), this, SLOT(replyFinished()));
+        _reply->setParent(this);
+
+        return _reply;
     }
 
-    void Request::networkRequestFinished(QNetworkReply *reply)
+    void Request::replyFinished()
     {
-        Response *response = new Response(reply);
+        if (_reply == 0) {
+            return;
+        }
+        // response steals ownership of _reply
+        Response *response = new Response(_reply);
+        _reply = 0;
+
+        // set response as parent so this request gets deleted
+        // when the response is deleted at the end of the event loop
+        this->setParent(response);
+
+        // notify listeners
         emit responseRecieved(response);
+    }
+
+    void Request::downloadProgress(qint64 total, qint64 downloaded)
+    {
+        emit downloadProgress(((float)downloaded)/total);
     }
 }

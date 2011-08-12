@@ -38,13 +38,13 @@ namespace OAuthNS {
     {
         // take ownership of the reply
         _reply->setParent(this);
-        _rawContent = QString(reply->readAll());
+        _rawContent = reply->readAll();
 
         QVariant contentType = reply->header(QNetworkRequest::ContentTypeHeader);
         if (contentType.isValid()) {
             if (contentType.toString().startsWith(QString("application/x-www-form-urlencoded"))) {
                 _contentType = PARAMS;
-                QMapIterator<QString, QString> it(Util::parseParameters(_rawContent));
+                QMapIterator<QString, QString> it(Util::parseParameters(QString(_rawContent)));
                 while (it.hasNext()) {
                     it.next();
                     this->setProperty(it.key().toStdString().c_str(), QVariant(it.value()));
@@ -53,7 +53,7 @@ namespace OAuthNS {
             else if (contentType.toString().startsWith(QString("application/json"))) {
                 _contentType = JSON;
                 QScriptEngine engine;
-                _content = engine.evaluate(QString("(%1)").arg(_rawContent)).toVariant();
+                _content = engine.evaluate(QString("(%1)").arg(QString(_rawContent))).toVariant();
             }
         }
     }
@@ -68,7 +68,7 @@ namespace OAuthNS {
         return _contentType;
     }
 
-    QString Response::getRawContent()
+    QByteArray Response::getRawContent()
     {
         return _rawContent;
     }

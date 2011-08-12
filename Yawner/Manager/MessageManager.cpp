@@ -28,6 +28,7 @@
 
 #include "MessageManager.h"
 #include "Yawner.h"
+#include "../../OAuth/Request.h"
 
 namespace YawnerNS {
     namespace ManagerNS {
@@ -39,12 +40,18 @@ namespace YawnerNS {
 
         void MessageManager::init()
         {
-            _yawner()
+            fetchMessages();
+        }
+
+        void MessageManager::fetchMessages()
+        {
+            OAuthNS::Request *request = _yawner()
                 ->getYammerApi()
                 ->get(
                     "https://www.yammer.com/api/v1/messages.json",
                     this, SLOT(messagesRecieved(OAuthNS::Response*))
                 );
+
         }
 
         YammerNS::Message* MessageManager::getMessageById(int id, bool *created)
@@ -63,6 +70,8 @@ namespace YawnerNS {
 
         void MessageManager::messagesRecieved(OAuthNS::Response* response)
         {
+            response->deleteLater();
+
             if (response->getContent().canConvert(QVariant::Map)) {
 
                 QList<int> newMessageIds;

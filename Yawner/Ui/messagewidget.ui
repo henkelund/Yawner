@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>512</width>
+    <width>530</width>
     <height>128</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
    <item>
     <widget class="QWidget" name="user" native="true">
      <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
+      <enum>Qt::LeftToRight</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="spacing">
@@ -103,7 +103,7 @@
 Doe</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
         </property>
        </widget>
       </item>
@@ -135,7 +135,7 @@ Doe</string>
        <number>4</number>
       </property>
       <property name="rightMargin">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
        <number>4</number>

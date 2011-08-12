@@ -29,6 +29,7 @@
 #include "UserManager.h"
 #include <QDir>
 #include <QScriptEngine>
+#include <QTimer>
 #include "Yawner.h"
 
 namespace YawnerNS {
@@ -41,7 +42,17 @@ namespace YawnerNS {
 
         void UserManager::init()
         {
+            fetchUsers();
+        }
 
+        void UserManager::fetchUsers()
+        {
+            _yawner()
+                ->getYammerApi()
+                ->get(
+                    "https://www.yammer.com/api/v1/users.json",
+                    this, SLOT(usersRecieved(OAuthNS::Response*))
+                );
         }
 
         void UserManager::_assertLoaded()
@@ -82,20 +93,56 @@ namespace YawnerNS {
             }
         }
 
-        YammerNS::User* UserManager::getUserById(int id)
+        YammerNS::User* UserManager::getUserById(int id, bool *created)
         {
-            _assertLoaded();
-            if (_userIndex.contains(id)) {
-                return _userIndex.value(id);
+            if (!_userIndex.contains(id)) {
+                _userIndex.insert(id, new YammerNS::User(this));
+                if(created != 0) {
+                    (*created) = true;
+                }
             }
-            return 0;
+            else if(created != 0) {
+                (*created) = false;
+            }
+            return _userIndex.value(id);
         }
 
-        void UserManager::userRecieved(OAuthNS::Response* response)
+        void UserManager::usersRecieved(OAuthNS::Response* response)
         {
-            qDebug(response->getRawContent().toStdString().c_str());
-            qDebug(QString::number(response->getReplyObject()->error()).toStdString().c_str());
-        }
+            response->deleteLater();
 
+            if (response->getContent().canConvert(QVariant::List)) {
+
+                QList<int> newUserIds;
+
+                QList<QVariant> users = response->getContent().toList();
+                QListIterator<QVariant> it(users);
+                while (it.hasNext()) {
+
+                    QVariant userListItem = it.next();
+                    if (userListItem.canConvert(QVariant::Map)) {
+
+                        QMap<QString, QVariant> userData = userListItem.toMap();
+                        if (userData.contains("id") &&
+                                userData.value("id").canConvert(QVariant::Int)) {
+
+                            int id = userData.value("id").toInt();
+                            if (id > 0) {
+                                bool created = false;
+                                YammerNS::User *user = getUserById(id, &created);
+                                user->load(userData);
+                                if (created == true) {
+                                    newUserIds.append(id);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (newUserIds.count() > 0) {
+                    emit newUsersLoaded(newUserIds);
+                }
+            }
+        }
     }
 }

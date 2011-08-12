@@ -31,6 +31,7 @@
 
 #include <QWidget>
 #include "../../Yammer/Message.h"
+#include "../../Yammer/User.h"
 
 namespace Ui {
     class MessageWidget;
@@ -51,6 +52,9 @@ namespace YawnerNS {
 
         private:
             Ui::MessageWidget *_ui;
+
+        public slots:
+            void userDataLoaded(YammerNS::Abstract *user);
         };
 
     }

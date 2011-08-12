@@ -32,6 +32,7 @@
 #include <QInputDialog>
 #include <QDesktopServices>
 #include <QTimer>
+#include <QBoxLayout>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
@@ -47,9 +48,13 @@ namespace YawnerNS {
         {
             _ui->setupUi(this);
 
-            _ui->centralWidget->setStyleSheet(QString(
-                "QScrollBar { width: 4px; } QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; } QScrollBar::add-page, QScrollBar::sub-page { background: transparent; } QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; }"
-            ));
+            _ui->centralWidget->setStyleSheet(
+                QString("QScrollBar { width: 4px; }")
+                .append("QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; }")
+                .append("QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }")
+                .append("QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; }")
+                .append("QTextBrowser QScrollBar::handle { margin-top: 4px; margin-bottom:4px; }")
+            );
 
             OAuthNS::Consumer consumer = _yawner->getConsumer();
 
@@ -88,6 +93,10 @@ namespace YawnerNS {
                     SIGNAL(newMessagesLoaded(QList<int>)),
                     SLOT(newMessagesLoaded(QList<int>))
                 );
+                QTimer *timer = new QTimer(this);
+                timer->setInterval(60000);
+                connect(timer, SIGNAL(timeout()), _yawner->getMessageManager(), SLOT(fetchMessages()));
+                timer->start();
             }
         }
 
@@ -125,10 +134,12 @@ namespace YawnerNS {
         void MainWindow::newMessagesLoaded(QList<int> messageIds)
         {
             QListIterator<int> it(messageIds);
-            while (it.hasNext()) {
+            it.toBack();
+            while (it.hasPrevious()) {
                 YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(
-                            _yawner->getMessageManager()->getMessageById(it.next()), _ui->messageList);
-                _ui->messageList->layout()->addWidget(mWidget);
+                _yawner->getMessageManager()->getMessageById(it.previous()), _ui->messageList);
+                QVBoxLayout *layout = static_cast<QVBoxLayout*>(_ui->messageList->layout());
+                layout->insertWidget(0, mWidget);
             }
             update();
         }

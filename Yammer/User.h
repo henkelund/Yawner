@@ -33,6 +33,7 @@
 #include <QObject>
 #include <QScriptValue>
 #include <QPixmap>
+#include "../OAuth/Response.h"
 
 namespace YammerNS {
 
@@ -42,7 +43,10 @@ namespace YammerNS {
 
     protected:
         QPixmap *_smallImage;
+        bool _hasPendingSmallImageRequest;
         static QPixmap *_defaultSmallImage;
+
+        QString _getImageFileName();
 
     public:
         explicit User(QObject *parent = 0);
@@ -58,7 +62,7 @@ namespace YammerNS {
     signals:
 
     public slots:
-
+        void imageRecieved(OAuthNS::Response *response);
     };
 
 }

@@ -53,6 +53,7 @@ namespace OAuthNS {
         QMap<QString, QString>          _parameters;
         QString                         _baseString;
         static QNetworkAccessManager    *_networkAccessManager;
+        QNetworkReply                   *_reply;
 
     public:
 
@@ -215,14 +216,25 @@ namespace OAuthNS {
             // 'OAuthNS' is explicitly stated here to enable connections from outside the namespace
             OAuthNS::Response *response);
 
+        /**
+         *
+         * @param float
+         */
+        void downloadProgress(float progress);
+
     public slots:
 
         /**
          *
-         * @param QNetworkReply *reply
          */
-        void networkRequestFinished(QNetworkReply *reply);
+        void replyFinished();
 
+        /**
+         *
+         * @param qint64
+         * @param qint64
+         */
+        void downloadProgress(qint64 total, qint64 downloaded);
     };
 
 }

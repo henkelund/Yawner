@@ -41,23 +41,29 @@ namespace YawnerNS {
             _ui(new Ui::MessageWidget)
         {
             _ui->setupUi(this);
-            /*_ui->message->setStyleSheet(QString(
-                "QScrollBar::add-page, QScrollBar::sub-page { background: #008B9E; } QScrollBar::handle { border-radius: 4px; border: 0; background: #FF5800; }"
-            ));*/
-            //_message->setParent(this);
             _ui->message->setText(_message->getText());
-            //_ui->message->setText(QString("Lorem Ipsum"));
-
+            _ui->user->layout()->setAlignment(_ui->avatar, Qt::AlignHCenter);
             YammerNS::User* user = _message->getUser();
             if (user != 0) {
-                _ui->name->setText(user->getData("full_name").toString().replace(QString(" "), QString("\n")));
-                _ui->avatar->setPixmap(user->getSmallImage());
+                userDataLoaded(user);
             }
+            connect(
+                _message->getUser(),
+                SIGNAL(dataLoaded(YammerNS::Abstract*)),
+                this,
+                SLOT(userDataLoaded(YammerNS::Abstract*))
+            );
         }
 
         MessageWidget::~MessageWidget()
         {
             delete _ui;
+        }
+
+        void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
+        {
+            _ui->name->setText(_message->getUser()->getData("full_name").toString().replace(QString(" "), QString("\n")));
+            _ui->avatar->setPixmap(_message->getUser()->getSmallImage());
         }
 
     }

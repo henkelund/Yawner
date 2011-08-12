@@ -29,6 +29,8 @@
 #include "User.h"
 #include <QVariant>
 #include <QFile>
+#include <QImage>
+#include <QImageWriter>
 #include "Yawner.h"
 
 namespace YammerNS {
@@ -36,7 +38,7 @@ namespace YammerNS {
     QPixmap* User::_defaultSmallImage = 0;
 
     User::User(QObject *parent) :
-        Abstract(parent), _smallImage(0)
+        Abstract(parent), _smallImage(0), _hasPendingSmallImageRequest(false)
     {
     }
 
@@ -64,20 +66,26 @@ namespace YammerNS {
     {
         if (_smallImage == 0) {
             // load from file
-            QFile imageFile(
-                Yawner::getInstance()
-                ->getYawnerDir().
-                absoluteFilePath(
-                    QString("%1.user.jpg")
-                        .arg(QString::number(getId()))
-                )
-            );
 
+            QFile imageFile(_getImageFileName());
             if (imageFile.exists()) {
                 _smallImage = new QPixmap(imageFile.fileName());
             }
             else {
                 // if not found download from mugshot_url
+                QString mugshotUrl = getData(QString("mugshot_url")).toString();
+                if (!_hasPendingSmallImageRequest && !mugshotUrl.isEmpty() && !mugshotUrl.contains(QString("no_photo"))) {
+
+                    _hasPendingSmallImageRequest = true;
+
+                    Yawner::getInstance()
+                        ->getYammerApi()
+                        ->get(
+                            mugshotUrl.toStdString().c_str(),
+                            this, SLOT(imageRecieved(OAuthNS::Response*))
+                        );
+                }
+
                 // while waiting for download -> return default image
                 if (_defaultSmallImage == 0) {
                     _defaultSmallImage = new QPixmap(QString(":/icon.svg"));
@@ -88,4 +96,30 @@ namespace YammerNS {
         return *_smallImage;
     }
 
+    QString User::_getImageFileName()
+    {
+        return Yawner::getInstance()
+                ->getYawnerDir().
+                absoluteFilePath(
+                    QString("%1.user.img").arg(QString::number(getId()))
+                );
+    }
+
+    void User::imageRecieved(OAuthNS::Response *response)
+    {
+        response->deleteLater();
+
+        if (response->getRawContent().length() > 0) {
+            QImage image;
+            image.loadFromData(response->getRawContent());
+            QImageWriter writer(
+                _getImageFileName(),
+                response->getReplyObject()->url().toString().split(QString(".")).last().toUtf8()
+            );
+            writer.write(image);
+            emit dataLoaded(this);
+        }
+
+        _hasPendingSmallImageRequest = false;
+    }
 }

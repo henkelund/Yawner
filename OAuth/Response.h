@@ -44,7 +44,7 @@ namespace OAuthNS {
     protected:
 
         QNetworkReply   *_reply;
-        QString         _rawContent;
+        QByteArray      _rawContent;
         QVariant        _content;
 
     public:
@@ -74,17 +74,13 @@ namespace OAuthNS {
          *
          * @return QVariant
          */
-        QString         getRawContent();
+        QByteArray      getRawContent();
 
         /**
          *
          * @return QVariant
          */
         QVariant        getContent();
-
-    signals:
-
-    public slots:
 
     };
 

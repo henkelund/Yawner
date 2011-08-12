@@ -98,29 +98,6 @@ namespace YammerNS {
         );
     }
 
-    void Api::users()
-    {
-        //create request
-        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
-            _consumer,
-            _accessToken,
-            QString("https://www.yammer.com/api/v1/users.json")
-        );
-
-        OAuthNS::SignatureMethodNS::Plaintext sm;
-        request->signRequest(&sm, _consumer, _accessToken);
-
-        // OAuthNS::Response will take ownership of the reply object
-        QNetworkReply *reply = request->exec();
-
-        // register callback
-        QObject::connect(
-            request,
-            SIGNAL(responseRecieved(OAuthNS::Response*)),
-            SLOT(usersRecieved(OAuthNS::Response*))
-        );
-    }
-
     OAuthNS::Request* Api::get(const char* resource, QObject *receiverObject, const char* recieverMethod)
     {
         //create request
@@ -134,7 +111,12 @@ namespace YammerNS {
         request->signRequest(&sm, _consumer, _accessToken);
         // OAuthNS::Response will take ownership of the reply object
         QNetworkReply *reply = request->exec();
-
+        connect(
+            reply,
+            SIGNAL(downloadProgress(qint64,qint64)),
+            request,
+            SLOT(downloadProgress(qint64,qint64))
+        );
         // register callback
         connect(
             request,
@@ -168,43 +150,9 @@ namespace YammerNS {
         }
         else if (response->getReplyObject()->property("is_call_request").isValid()) {
 
-            qDebug(response->getRawContent().toStdString().c_str());
+            //qDebug(response->getRawContent().toStdString().c_str());
         }
 
         response->deleteLater();
-    }
-
-    void Api::usersRecieved(OAuthNS::Response *response)
-    {
-        QScriptValue sc;
-        QScriptEngine engine;
-        sc = engine.evaluate("(" + response->getRawContent() + ")");
-
-        if (sc.isArray()) {
-            QScriptValueIterator it(sc);
-            while (it.hasNext()) {
-                it.next();
-                if (!it.value().isObject())
-                    continue;
-
-                if (it.value().property(QString("id")).isNumber()) {
-                    QString filename = QString("%1.user.json").arg(it.value().property(QString("id")).toString());
-                    QDir dir = Yawner::getInstance()->getYawnerDir();
-                    QFile file(dir.absoluteFilePath(filename));
-
-                    QScriptValue args = engine.newArray();
-                    args.setProperty(0, it.value());
-
-                    QString stringified =
-                        engine.evaluate(QString("JSON.stringify"))
-                            .call(engine.globalObject(), args)
-                                .toString();
-
-                    file.open(QFile::WriteOnly);
-                    file.write(stringified.toUtf8());
-                    file.close();
-                }
-            }
-        }
     }
 }
