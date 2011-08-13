@@ -1,8 +1,11 @@
-<!DOCTYPE RCC><RCC version="1.0">
- <qresource>
-     <file>icon.svg</file>
-     <file>icon16.png</file>
-     <file>icon32.png</file>
-     <file>icon96.png</file>
- </qresource>
- </RCC>
+<RCC>
+    <qresource prefix="/">
+        <file>icon.svg</file>
+        <file>icon16.png</file>
+        <file>icon32.png</file>
+        <file>icon64.png</file>
+        <file>icon128.png</file>
+        <file>icon256.png</file>
+        <file>icon512.png</file>
+    </qresource>
+</RCC>
