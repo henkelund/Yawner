@@ -57,7 +57,7 @@ namespace YammerNS {
 
     QString Message::getText()
     {
-        return getData(QString("body")).toMap().value(QString("plain")).toString();
+        return getData(QString("body")).toMap().value(QString("parsed")).toString();
     }
 
     User* Message::getUser()

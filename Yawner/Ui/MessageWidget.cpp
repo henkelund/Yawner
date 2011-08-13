@@ -31,7 +31,11 @@
 #include "ui_messagewidget.h"
 #include <QListIterator>
 #include <QScrollBar>
+#include <QTimer>
+#include <QPainter>
+#include <QLinearGradient>
 #include "Yammer/User.h"
+#include "Yawner.h"
 
 namespace YawnerNS {
     namespace UiNS {
@@ -41,18 +45,24 @@ namespace YawnerNS {
             _ui(new Ui::MessageWidget)
         {
             _ui->setupUi(this);
-            _ui->message->setText(_message->getText());
             _ui->user->layout()->setAlignment(_ui->avatar, Qt::AlignHCenter);
             YammerNS::User* user = _message->getUser();
             if (user != 0) {
                 userDataLoaded(user);
             }
             connect(
+                _message,
+                SIGNAL(dataLoaded(YammerNS::Abstract*)),
+                this,
+                SLOT(messageDataLoaded(YammerNS::Abstract*))
+            );
+            connect(
                 _message->getUser(),
                 SIGNAL(dataLoaded(YammerNS::Abstract*)),
                 this,
                 SLOT(userDataLoaded(YammerNS::Abstract*))
             );
+            messageDataLoaded(_message);
         }
 
         MessageWidget::~MessageWidget()
@@ -60,11 +70,124 @@ namespace YawnerNS {
             delete _ui;
         }
 
-        void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
+        void MessageWidget::processMessageData()
         {
             _ui->name->setText(_message->getUser()->getData("full_name").toString().replace(QString(" "), QString("\n")));
-            _ui->avatar->setPixmap(_message->getUser()->getSmallImage());
+
+            QPixmap avatar = _message->getUser()->getSmallImage();
+            _ui->avatar->setPixmap(_decorateAvatar(&avatar));
+
+            QString repliedToName;
+            YammerNS::Message *repliedToMessage = 0;
+            int repliedToId = _message->getData("replied_to_id").toInt();
+            if (repliedToId > 0) {
+                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId);
+                repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
+            }
+
+            if (!repliedToName.isEmpty()) {
+                _ui->topRightMeta->setHidden(false);
+                _ui->topRightMeta->setText(QString("Re: <a style=\"color: #008b9e\" href=\"#\">%1</a>").arg(repliedToName));
+            }
+            else {
+                _ui->topRightMeta->setHidden(true);
+            }
+
+            int likes = _message->getData("liked_by").toMap().value("count").toInt();
+            if (likes > 0) {
+                _ui->topLeftMeta->setHidden(false);
+                _ui->topLeftMeta->setText(QString("+ %1").arg(likes));
+            }
+            else {
+                _ui->topLeftMeta->setHidden(true);
+            }
+
+            _ui->message->setText(_filterText(_message->getText()));
+            update();
         }
 
+        void MessageWidget::messageDataLoaded(YammerNS::Abstract *message)
+        {
+            QTimer::singleShot(100, this, SLOT(processMessageData()));
+        }
+
+        void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
+        {
+            QTimer::singleShot(100, this, SLOT(processMessageData()));
+        }
+
+        void MessageWidget::paintEvent(QPaintEvent *e)
+        {
+            QPainter painter(this);
+
+            QLinearGradient gradient(0, 0, 0, height());
+            gradient.setColorAt(0.0, QColor(0, 0, 0, 32));
+            gradient.setColorAt(0.20, Qt::transparent);
+            gradient.setColorAt(0.80, Qt::transparent);
+            gradient.setColorAt(1.0, QColor(255, 255, 255, 24));
+
+            QPainterPath roundRect;
+            roundRect.addRoundedRect(0, 0, width(), height(), 16, 16, Qt::AbsoluteSize);
+
+            painter.fillPath(roundRect, gradient);
+
+        }
+
+        QPixmap MessageWidget::_decorateAvatar(QPixmap *avatar)
+        {
+            QBrush brush(*avatar);
+            QPixmap roundedAvatar(avatar->width(), avatar->height());
+            roundedAvatar.fill(Qt::transparent);
+            QPainter painter(&roundedAvatar);
+            QPainterPath roundRect;
+            roundRect.addRoundedRect(0, 0, roundedAvatar.width(), roundedAvatar.height(), 10, 10, Qt::AbsoluteSize);
+            painter.setRenderHint(QPainter::Antialiasing, true);
+            painter.fillPath(roundRect, brush);
+            painter.setRenderHint(QPainter::Antialiasing, false);
+            return roundedAvatar;
+        }
+
+        QString MessageWidget::_filterText(QString rawText)
+        {
+            QRegExp linkPattern("(https?:\\/\\/[^\\s]+[\\w\\/])");
+            QStringList linkMatches;
+            int pos = 0;
+
+            while ((pos = linkPattern.indexIn(rawText, pos)) != -1) {
+                linkMatches.append(linkPattern.cap(1));
+                pos += linkPattern.matchedLength();
+            }
+
+            QStringListIterator linkIt(linkMatches);
+            while (linkIt.hasNext()) {
+                QString link(linkIt.next());
+                rawText = rawText.replace(
+                    link,
+                    QString("<a style=\"color: #008b9e; font: 700 8pt;\" href=\"%1\">%1</a>").arg(link)
+                 );
+            }
+
+            QRegExp userPattern("\\[\\[user:([0-9]+)\\]\\]");
+            QStringList userMatches;
+            pos = 0;
+
+            while ((pos = userPattern.indexIn(rawText, pos)) != -1) {
+                userMatches.append(userPattern.cap(1));
+                pos += userPattern.matchedLength();
+            }
+
+            QStringListIterator it(userMatches);
+            while (it.hasNext()) {
+                int uid = it.next().toInt();
+                if (uid > 0) {
+                    YammerNS::User *user = Yawner::getInstance()->getUserManager()->getUserById(uid);
+                    rawText = rawText.replace(
+                        QString("[[user:%1]]").arg(uid),
+                        QString("<a style=\"color: #008b9e; font: 700 8pt;\" href=\"#\">%1</a>").arg(user->getData("full_name").toString())
+                     );
+                }
+            }
+            return rawText;
+        }
     }
 }

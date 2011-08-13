@@ -50,10 +50,10 @@ namespace YawnerNS {
 
             _ui->centralWidget->setStyleSheet(
                 QString("QScrollBar { width: 4px; }")
-                .append("QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; }")
-                .append("QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }")
-                .append("QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; }")
-                .append("QTextBrowser QScrollBar::handle { margin-top: 4px; margin-bottom:4px; }")
+                .append("QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; } ")
+                .append("QScrollBar::add-page, QScrollBar::sub-page { background: transparent; } ")
+                .append("QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; } ")
+                .append("QTextBrowser QScrollBar::handle { margin-top: 4px; margin-bottom:4px; } ")
             );
 
             OAuthNS::Consumer consumer = _yawner->getConsumer();

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>255</width>
-    <height>504</height>
+    <width>300</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,9 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <property name="margin">
      <number>0</number>
     </property>
@@ -33,7 +36,8 @@
       <property name="styleSheet">
        <string notr="true">font: 75 11pt;
 color: rgb(36, 36, 36);
-background-color: rgb(0, 139, 158);</string>
+background-color: rgb(0, 139, 158);
+margin: 0;</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
@@ -52,8 +56,8 @@ background-color: rgb(0, 139, 158);</string>
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>255</width>
-         <height>479</height>
+         <width>300</width>
+         <height>475</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2"/>
@@ -67,7 +71,7 @@ background-color: rgb(0, 139, 158);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>255</width>
+     <width>300</width>
      <height>25</height>
     </rect>
    </property>

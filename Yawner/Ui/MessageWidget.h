@@ -46,6 +46,9 @@ namespace YawnerNS {
         protected:
             YammerNS::Message *_message;
 
+            QPixmap _decorateAvatar(QPixmap *avatar);
+            QString _filterText(QString rawText);
+
         public:
             explicit MessageWidget(YammerNS::Message *message, QWidget *parent = 0);
             ~MessageWidget();
@@ -54,6 +57,9 @@ namespace YawnerNS {
             Ui::MessageWidget *_ui;
 
         public slots:
+            void paintEvent(QPaintEvent *e);
+            void processMessageData();
+            void messageDataLoaded(YammerNS::Abstract *user);
             void userDataLoaded(YammerNS::Abstract *user);
         };
 
