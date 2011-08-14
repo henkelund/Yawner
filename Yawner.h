@@ -41,6 +41,7 @@ class Yawner;
 
 #include "Yawner/Manager/UserManager.h"
 #include "Yawner/Manager/MessageManager.h"
+#include "Yawner/Manager/NotificationManager.h"
 
 class Yawner : public QObject
 {
@@ -53,6 +54,7 @@ private:
     YammerNS::Api *_yammerApi;
     YawnerNS::ManagerNS::UserManager *_userManager;
     YawnerNS::ManagerNS::MessageManager *_messageManager;
+    YawnerNS::ManagerNS::NotificationManager *_notificationManager;
 
     explicit Yawner();
 
@@ -79,6 +81,8 @@ public:
     YawnerNS::ManagerNS::UserManager* getUserManager();
 
     YawnerNS::ManagerNS::MessageManager* getMessageManager();
+
+    YawnerNS::ManagerNS::NotificationManager* getNotificationManager();
 
     QString getFileContents(QString filename);
 

@@ -56,6 +56,7 @@ namespace YawnerNS {
             Yawner *_yawner;
 
         public slots:
+            void fetchMessages();
             void requestTokenRecieved(OAuthNS::Token token);
             void accessTokenRecieved(OAuthNS::Token token);
             void newMessagesLoaded(QList<int> messageIds);

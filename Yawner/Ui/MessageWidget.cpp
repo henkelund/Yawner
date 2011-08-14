@@ -34,6 +34,8 @@
 #include <QTimer>
 #include <QPainter>
 #include <QLinearGradient>
+#include <QDesktopServices>
+#include <QMessageBox>
 #include "Yammer/User.h"
 #include "Yawner.h"
 
@@ -46,6 +48,11 @@ namespace YawnerNS {
         {
             _ui->setupUi(this);
             _ui->user->layout()->setAlignment(_ui->avatar, Qt::AlignHCenter);
+            _ui->message->setOpenLinks(false);
+            _ui->message->setOpenExternalLinks(false);
+
+            connect(_ui->message, SIGNAL(anchorClicked(QUrl)), this, SLOT(anchorClicked(QUrl)));
+
             YammerNS::User* user = _message->getUser();
             if (user != 0) {
                 userDataLoaded(user);
@@ -85,24 +92,7 @@ namespace YawnerNS {
                 repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
             }
 
-            if (!repliedToName.isEmpty()) {
-                _ui->topRightMeta->setHidden(false);
-                _ui->topRightMeta->setText(QString("Re: <a style=\"color: #008b9e\" href=\"#\">%1</a>").arg(repliedToName));
-            }
-            else {
-                _ui->topRightMeta->setHidden(true);
-            }
-
-            int likes = _message->getData("liked_by").toMap().value("count").toInt();
-            if (likes > 0) {
-                _ui->topLeftMeta->setHidden(false);
-                _ui->topLeftMeta->setText(QString("+ %1").arg(likes));
-            }
-            else {
-                _ui->topLeftMeta->setHidden(true);
-            }
-
-            _ui->message->setText(_filterText(_message->getText()));
+            _ui->message->setHtml(_filterText(_message->getText()));
             update();
         }
 
@@ -130,7 +120,25 @@ namespace YawnerNS {
             roundRect.addRoundedRect(0, 0, width(), height(), 16, 16, Qt::AbsoluteSize);
 
             painter.fillPath(roundRect, gradient);
+        }
 
+        void MessageWidget::anchorClicked(QUrl url)
+        {
+            QRegExp threadPattern("thread:([0-9]+)");
+            if (QRegExp("^https?:\\/\\/").indexIn(url.toString()) != -1) {
+                QDesktopServices::openUrl(url);
+            }
+            else if (threadPattern.indexIn(url.toString()) != -1) {
+                int threadId = threadPattern.cap(1).toInt();
+                if (threadId > 0) {
+                    QMessageBox msg(this);
+                    msg.setText(
+                        QString("Thread view is not implemented yet.")
+                    );
+                    msg.setIcon(QMessageBox::Information);
+                    msg.exec();
+                }
+            }
         }
 
         QPixmap MessageWidget::_decorateAvatar(QPixmap *avatar)
@@ -163,7 +171,7 @@ namespace YawnerNS {
                 QString link(linkIt.next());
                 rawText = rawText.replace(
                     link,
-                    QString("<a style=\"color: #008b9e; font: 700 8pt;\" href=\"%1\">%1</a>").arg(link)
+                    QString("<a style=\"color: #008b9e; font: 700 10px; text-decoration: none;\" href=\"%1\">%1</a>").arg(link)
                  );
             }
 
@@ -183,11 +191,24 @@ namespace YawnerNS {
                     YammerNS::User *user = Yawner::getInstance()->getUserManager()->getUserById(uid);
                     rawText = rawText.replace(
                         QString("[[user:%1]]").arg(uid),
-                        QString("<a style=\"color: #008b9e; font: 700 8pt;\" href=\"#\">%1</a>").arg(user->getData("full_name").toString())
+                        QString("<a style=\"color: #008b9e; font: 700 10px; text-decoration: none;\" href=\"#\">%1</a>").arg(user->getData("full_name").toString())
                      );
                 }
             }
-            return rawText;
+
+            QString repliedToName;
+            YammerNS::Message *repliedToMessage = 0;
+            int repliedToId = _message->getData("replied_to_id").toInt();
+            if (repliedToId > 0) {
+                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId);
+                repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
+            }
+
+            if (!repliedToName.isEmpty()) {
+                rawText.prepend(QString("@<a style=\"color: #FF5800; font: 700 10px; text-decoration: none;\" href=\"thread:%1\">%2</a>: ").arg(QString::number(repliedToId), repliedToName));
+            }
+
+            return rawText.replace(QString("\n"), QString("<br />"));
         }
     }
 }

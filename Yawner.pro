@@ -9,6 +9,9 @@ QT       += core gui network script
 TARGET = Yawner
 TEMPLATE = app
 
+CONFIG += link_pkgconfig
+PKGCONFIG += libnotify
+
 SOURCES += main.cpp\
     Yawner/Ui/MainWindow.cpp \
     OAuth/Consumer.cpp \
@@ -28,7 +31,8 @@ SOURCES += main.cpp\
     Yawner/Manager/UserManager.cpp \
     Yammer/Abstract.cpp \
     Yawner/Ui/MessageText.cpp \
-    Yawner/Manager/MessageManager.cpp
+    Yawner/Manager/MessageManager.cpp \
+    Yawner/Manager/NotificationManager.cpp
 
 HEADERS  += Yawner/Ui/MainWindow.h \
     OAuth/Consumer.h \
@@ -48,7 +52,8 @@ HEADERS  += Yawner/Ui/MainWindow.h \
     Yawner/Manager/UserManager.h \
     Yammer/Abstract.h \
     Yawner/Ui/MessageText.h \
-    Yawner/Manager/MessageManager.h
+    Yawner/Manager/MessageManager.h \
+    Yawner/Manager/NotificationManager.h
 
 FORMS    += Yawner/Ui/mainwindow.ui \
     Yawner/Ui/messagewidget.ui

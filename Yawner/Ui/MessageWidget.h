@@ -58,6 +58,7 @@ namespace YawnerNS {
 
         public slots:
             void paintEvent(QPaintEvent *e);
+            void anchorClicked(QUrl url);
             void processMessageData();
             void messageDataLoaded(YammerNS::Abstract *user);
             void userDataLoaded(YammerNS::Abstract *user);

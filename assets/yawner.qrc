@@ -7,5 +7,7 @@
         <file>icon128.png</file>
         <file>icon256.png</file>
         <file>icon512.png</file>
+        <file>yawner.css</file>
+        <file>sizegrip.png</file>
     </qresource>
 </RCC>

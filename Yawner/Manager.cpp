@@ -32,8 +32,21 @@
 namespace YawnerNS {
 
     Manager::Manager(QObject *parent) :
-        QObject(parent)
+        QObject(parent), _isInitialized(false)
     {
+    }
+
+    void Manager::_init()
+    {
+
+    }
+
+    void Manager::init()
+    {
+        if (!_isInitialized) {
+            _init();
+            _isInitialized = true;
+        }
     }
 
     Yawner* Manager::_yawner()

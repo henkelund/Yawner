@@ -48,13 +48,16 @@ namespace YawnerNS {
         {
             _ui->setupUi(this);
 
-            _ui->centralWidget->setStyleSheet(
-                QString("QScrollBar { width: 4px; }")
-                .append("QScrollBar::up-arrow, QScrollBar::add-line, QScrollBar::down-arrow, QScrollBar::sub-line { background: transparent; border: 0; } ")
-                .append("QScrollBar::add-page, QScrollBar::sub-page { background: transparent; } ")
-                .append("QScrollBar::handle { border-radius: 2px; border: 0; background: #FF5800; } ")
-                .append("QTextBrowser QScrollBar::handle { margin-top: 4px; margin-bottom:4px; } ")
-            );
+            QFile styleSheet(QString(":/yawner.css"));
+            QString css;
+            if (styleSheet.open(QFile::ReadOnly)) {
+                css = styleSheet.readAll();
+                styleSheet.close();
+            }
+
+            if (!css.isEmpty()) {
+                setStyleSheet(css);
+            }
 
             OAuthNS::Consumer consumer = _yawner->getConsumer();
 
@@ -95,7 +98,7 @@ namespace YawnerNS {
                 );
                 QTimer *timer = new QTimer(this);
                 timer->setInterval(60000);
-                connect(timer, SIGNAL(timeout()), _yawner->getMessageManager(), SLOT(fetchMessages()));
+                connect(timer, SIGNAL(timeout()), this, SLOT(fetchMessages()));
                 timer->start();
             }
         }
@@ -136,14 +139,25 @@ namespace YawnerNS {
             QListIterator<int> it(messageIds);
             it.toBack();
             while (it.hasPrevious()) {
-                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(
-                _yawner->getMessageManager()->getMessageById(it.previous()), _ui->messageList);
+                YammerNS::Message *message = _yawner->getMessageManager()->getMessageById(it.previous());
+                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(message, _ui->messageList);
                 QVBoxLayout *layout = static_cast<QVBoxLayout*>(_ui->messageList->layout());
                 layout->insertWidget(0, mWidget);
+                if (!it.hasPrevious()) {
+                    _yawner->getNotificationManager()->show(
+                        QString("Yawner"), //message->getUser()->getData("full_name").toString(),
+                        message->getData("body").toMap().value("plain").toString()
+                    );
+                }
             }
             update();
         }
 
+        void MainWindow::fetchMessages()
+        {
+            statusBar()->showMessage(QString("Fetching messages.."), 3000);
+            _yawner->getMessageManager();
+        }
     }
 }
 

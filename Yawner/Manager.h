@@ -41,12 +41,18 @@ namespace YawnerNS {
         Q_OBJECT
     protected:
 
+        bool _isInitialized;
+
+        virtual void _init();
+
         YammerNS::Api* _api();
 
         Yawner* _yawner();
 
     public:
         explicit Manager(QObject *parent = 0);
+
+        void init();
 
     signals:
 

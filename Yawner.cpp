@@ -35,7 +35,7 @@ Yawner* Yawner::_instance = 0;
 Yawner::Yawner() :
     QObject(0),
     _settings(new QSettings(QString("Yawner"), QString("Yawner"), this)),
-    _yammerApi(0), _messageManager(0), _userManager(0)
+    _yammerApi(0), _userManager(0), _messageManager(0), _notificationManager(0)
 {
     _yammerApi = new YammerNS::Api(getConsumer(), this);
 }
@@ -121,6 +121,15 @@ YawnerNS::ManagerNS::MessageManager* Yawner::getMessageManager()
         _messageManager->init();
     }
     return _messageManager;
+}
+
+YawnerNS::ManagerNS::NotificationManager* Yawner::getNotificationManager()
+{
+    if (_notificationManager == 0) {
+        _notificationManager = new YawnerNS::ManagerNS::NotificationManager(this);
+        _notificationManager->init();
+    }
+    return _notificationManager;
 }
 
 QString Yawner::getFileContents(QString filename)

@@ -24,6 +24,9 @@
    </size>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
      <number>0</number>
@@ -34,10 +37,7 @@
     <item>
      <widget class="QScrollArea" name="scrollArea">
       <property name="styleSheet">
-       <string notr="true">font: 75 11pt;
-color: rgb(36, 36, 36);
-background-color: rgb(0, 139, 158);
-margin: 0;</string>
+       <string notr="true"/>
       </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
@@ -57,7 +57,7 @@ margin: 0;</string>
          <x>0</x>
          <y>0</y>
          <width>300</width>
-         <height>475</height>
+         <height>453</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2"/>
@@ -74,6 +74,11 @@ margin: 0;</string>
      <width>300</width>
      <height>25</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="autoFillBackground">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>
