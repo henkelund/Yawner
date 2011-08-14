@@ -2,6 +2,7 @@
 #define NOTIFICATIONMANAGER_H
 
 #include "../Manager.h"
+#include <QSystemTrayIcon>
 
 namespace YawnerNS {
     namespace ManagerNS {
@@ -10,6 +11,8 @@ namespace YawnerNS {
         {
             Q_OBJECT
         protected:
+
+            QSystemTrayIcon *_icon;
 
             virtual void _init();
 

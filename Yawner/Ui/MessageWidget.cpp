@@ -119,7 +119,9 @@ namespace YawnerNS {
             QPainterPath roundRect;
             roundRect.addRoundedRect(0, 0, width(), height(), 16, 16, Qt::AbsoluteSize);
 
+            painter.setRenderHint(QPainter::Antialiasing, true);
             painter.fillPath(roundRect, gradient);
+            painter.setRenderHint(QPainter::Antialiasing, false);
         }
 
         void MessageWidget::anchorClicked(QUrl url)

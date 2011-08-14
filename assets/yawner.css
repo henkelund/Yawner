@@ -40,6 +40,7 @@ QTextBrowser#message QScrollBar::handle {
 }
 
 QLabel#name {
+    font: 700 11px;
     color: rgb(36, 36, 36);
 }
 
