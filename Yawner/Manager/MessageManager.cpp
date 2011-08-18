@@ -40,18 +40,44 @@ namespace YawnerNS {
 
         void MessageManager::init()
         {
-            fetchMessages();
+            requestMessages();
         }
 
-        void MessageManager::fetchMessages()
+        void MessageManager::requestMessages(Filter filter, QVariant value)
+        {
+            QMap<QString, QString> params;
+            switch (filter) {
+                case OlderThan: {
+                    if (value.canConvert(QVariant::Int)) {
+                        params.insert("older_than", value.toString());
+                    }
+                }
+                break;
+                case NewerThan: {
+                    if (value.canConvert(QVariant::Int)) {
+                        params.insert("newer_than", value.toString());
+                    }
+                }
+                break;
+            }
+
+            OAuthNS::Request *request = _yawner()
+                ->getYammerApi()
+                ->get(
+                    "messages",
+                    this, SLOT(messagesRecieved(OAuthNS::Response*)),
+                    params
+                );
+        }
+
+        void MessageManager::requestThreadMessages(int threadId)
         {
             OAuthNS::Request *request = _yawner()
                 ->getYammerApi()
                 ->get(
-                    "https://www.yammer.com/api/v1/messages.json",
+                    QString("messages/in_thread/%1").arg(QString::number(threadId)),
                     this, SLOT(messagesRecieved(OAuthNS::Response*))
                 );
-
         }
 
         YammerNS::Message* MessageManager::getMessageById(int id, bool *created)
@@ -66,6 +92,25 @@ namespace YawnerNS {
                 (*created) = false;
             }
             return _messageIndex.value(id);
+        }
+
+        QList<YammerNS::Message*> MessageManager::getMessagesByAttribute(QString key, QVariant value)
+        {
+            QList<YammerNS::Message*> messages;
+            QMapIterator<int, YammerNS::Message*> it(_messageIndex);
+            while (it.hasNext()) {
+                it.next();
+                QVariant messageValue = it.value()->getData(key);
+                if (messageValue.isValid() && messageValue == value) {
+                    messages.append(it.value());
+                }
+            }
+            return messages;
+        }
+
+        QList<YammerNS::Message*> MessageManager::getThreadMessages(int threadId)
+        {
+            return getMessagesByAttribute(QString("thread_id"), QVariant(threadId));
         }
 
         void MessageManager::messagesRecieved(OAuthNS::Response* response)
@@ -93,10 +138,10 @@ namespace YawnerNS {
 
                                 int id = messageData.value("id").toInt();
                                 if (id > 0) {
-                                    bool created = false;
-                                    YammerNS::Message *message = getMessageById(id, &created);
-                                    message->load(messageData);
-                                    if (created == true) {
+                                    YammerNS::Message *message = getMessageById(id);
+                                    bool firstLoad = false;
+                                    message->load(messageData, &firstLoad);
+                                    if (firstLoad == true) {
                                         newMessageIds.append(id);
                                     }
                                 }

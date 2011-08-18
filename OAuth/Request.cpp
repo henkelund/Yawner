@@ -263,6 +263,11 @@ namespace OAuthNS {
         return _reply;
     }
 
+    QUrl* Request::getUrl()
+    {
+        return &_url;
+    }
+
     void Request::replyFinished()
     {
         if (_reply == 0) {

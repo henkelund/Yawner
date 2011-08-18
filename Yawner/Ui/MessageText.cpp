@@ -56,7 +56,10 @@ namespace YawnerNS {
             darkPath.lineTo(10, 10);
             // area
             darkPath.addRoundedRect(10, 0, width() - 10, height(), 10, 10, Qt::AbsoluteSize);
-            QColor darkColor(0x98, 0xAF, 0x11); //QColor darkColor(36, 36, 36);
+            QColor darkColor(0x98, 0xAF, 0x11);
+            /*if (!isEnabled()) {
+                darkColor = QColor(0x9f9f9f);
+            }*/
             // draw it
             painter.fillPath(darkPath, QBrush(darkColor));
 
@@ -69,7 +72,11 @@ namespace YawnerNS {
             lightPath.lineTo(14, 10);
             // area
             lightPath.addRoundedRect(14, 4, width() - 18, height() - 8, 7, 7, Qt::AbsoluteSize);
-            QColor lightColor(0xD2, 0xFF, 0x00);
+            QColor lightColor(0xd2ff00);
+            /*if (!isEnabled()) {
+                lightColor = QColor(0xe9e9e9);
+            }*/
+
             // draw it
             painter.fillPath(lightPath, QBrush(lightColor));
 

@@ -42,6 +42,16 @@
 namespace YawnerNS {
     namespace UiNS {
 
+        bool message_widget_timestamp_less_than(MessageWidget* left, MessageWidget* right)
+        {
+            return left->isTimestampLessThan(right);
+        }
+
+        bool message_widget_timestamp_greater_than(MessageWidget* left, MessageWidget* right)
+        {
+            return left->isTimestampGreaterThan(right);
+        }
+
         MessageWidget::MessageWidget(YammerNS::Message *message, QWidget *parent) :
             QWidget(parent), _message(message),
             _ui(new Ui::MessageWidget)
@@ -77,20 +87,17 @@ namespace YawnerNS {
             delete _ui;
         }
 
+        YammerNS::Message* MessageWidget::getMessage()
+        {
+            return _message;
+        }
+
         void MessageWidget::processMessageData()
         {
             _ui->name->setText(_message->getUser()->getData("full_name").toString().replace(QString(" "), QString("\n")));
 
             QPixmap avatar = _message->getUser()->getSmallImage();
             _ui->avatar->setPixmap(_decorateAvatar(&avatar));
-
-            QString repliedToName;
-            YammerNS::Message *repliedToMessage = 0;
-            int repliedToId = _message->getData("replied_to_id").toInt();
-            if (repliedToId > 0) {
-                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId);
-                repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
-            }
 
             _ui->message->setHtml(_filterText(_message->getText()));
             update();
@@ -127,18 +134,20 @@ namespace YawnerNS {
         void MessageWidget::anchorClicked(QUrl url)
         {
             QRegExp threadPattern("thread:([0-9]+)");
+            QRegExp userPattern("user:([0-9]+)");
             if (QRegExp("^https?:\\/\\/").indexIn(url.toString()) != -1) {
-                QDesktopServices::openUrl(url);
+                emit webLinkClicked(url);
             }
             else if (threadPattern.indexIn(url.toString()) != -1) {
                 int threadId = threadPattern.cap(1).toInt();
                 if (threadId > 0) {
-                    QMessageBox msg(this);
-                    msg.setText(
-                        QString("Thread view is not implemented yet.")
-                    );
-                    msg.setIcon(QMessageBox::Information);
-                    msg.exec();
+                    emit threadLinkClicked(threadId);
+                }
+            }
+            else if (userPattern.indexIn(url.toString()) != -1) {
+                int userId = userPattern.cap(1).toInt();
+                if (userId > 0) {
+                    emit userLinkClicked(userId);
                 }
             }
         }
@@ -148,23 +157,36 @@ namespace YawnerNS {
             QBrush brush(*avatar);
             QPixmap roundedAvatar(avatar->width(), avatar->height());
             roundedAvatar.fill(Qt::transparent);
-            QPainter painter(&roundedAvatar);
+            QPainter painter;
+            painter.begin(&roundedAvatar);
             QPainterPath roundRect;
             roundRect.addRoundedRect(0, 0, roundedAvatar.width(), roundedAvatar.height(), 10, 10, Qt::AbsoluteSize);
             painter.setRenderHint(QPainter::Antialiasing, true);
             painter.fillPath(roundRect, brush);
             painter.setRenderHint(QPainter::Antialiasing, false);
+            painter.end();
             return roundedAvatar;
         }
 
         QString MessageWidget::_filterText(QString rawText)
         {
-            QRegExp linkPattern("(https?:\\/\\/[^\\s]+[\\w\\/])");
+            rawText = rawText
+                    .replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;")
+                    .replace("  ", "&nbsp;&nbsp;");
+
+            QRegExp linkPattern("((https?|ftp):(\\/\\/)+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)");
             QStringList linkMatches;
             int pos = 0;
 
             while ((pos = linkPattern.indexIn(rawText, pos)) != -1) {
-                linkMatches.append(linkPattern.cap(1));
+                QString link = linkPattern.cap(1);
+                if (!linkMatches.contains(link)) {
+                    linkMatches.append(link);
+                }
                 pos += linkPattern.matchedLength();
             }
 
@@ -193,7 +215,8 @@ namespace YawnerNS {
                     YammerNS::User *user = Yawner::getInstance()->getUserManager()->getUserById(uid);
                     rawText = rawText.replace(
                         QString("[[user:%1]]").arg(uid),
-                        QString("<a style=\"color: #008b9e; font: 700 10px; text-decoration: none;\" href=\"#\">%1</a>").arg(user->getData("full_name").toString())
+                        QString("<a style=\"color: #008b9e; font: 700 10px; text-decoration: none;\" href=\"user:%1\">%2</a>")
+                                .arg(QString::number(uid), user->getData("full_name").toString())
                      );
                 }
             }
@@ -202,15 +225,34 @@ namespace YawnerNS {
             YammerNS::Message *repliedToMessage = 0;
             int repliedToId = _message->getData("replied_to_id").toInt();
             if (repliedToId > 0) {
-                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId);
-                repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
+                bool created = false;
+                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId, &created);
+                if (created) {
+                    int threadId = _message->getData("thread_id").toInt();
+                    Yawner::getInstance()->getMessageManager()->requestThreadMessages(threadId);
+                }
+                else {
+                    repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
+                }
             }
 
             if (!repliedToName.isEmpty()) {
-                rawText.prepend(QString("@<a style=\"color: #FF5800; font: 700 10px; text-decoration: none;\" href=\"thread:%1\">%2</a>: ").arg(QString::number(repliedToId), repliedToName));
+                int threadId = _message->getData("thread_id").toInt();
+                rawText.prepend(QString("@<a style=\"color: #FF5800; font: 700 10px; text-decoration: none;\" href=\"thread:%1\">%2</a>: ")
+                                .arg(QString::number(threadId), repliedToName));
             }
 
             return rawText.replace(QString("\n"), QString("<br />"));
+        }
+
+        bool MessageWidget::isTimestampLessThan(MessageWidget* other)
+        {
+            return getMessage()->getTimestamp() < other->getMessage()->getTimestamp();
+        }
+
+        bool MessageWidget::isTimestampGreaterThan(MessageWidget* other)
+        {
+            return getMessage()->getTimestamp() > other->getMessage()->getTimestamp();
         }
     }
 }

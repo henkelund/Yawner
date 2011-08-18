@@ -35,6 +35,7 @@
 #include "Yammer/Api.h"
 #include "Yammer/Message.h"
 #include "OAuth/Token.h"
+#include "MessageWidget.h"
 
 namespace Ui {
     class MainWindow;
@@ -51,15 +52,21 @@ namespace YawnerNS {
             explicit MainWindow(QWidget *parent = 0);
             ~MainWindow();
 
+            void showView(QWidget *widget, bool animate = true);
+
         private:
             Ui::MainWindow *_ui;
             Yawner *_yawner;
+            QList<MessageWidget*> _threadWidgets;
 
         public slots:
+            void showThread(int threadId);
+            void showUser(int userId);
+            void showFeed();
+            void showBrowser(QUrl url);
             void fetchMessages();
             void requestTokenRecieved(OAuthNS::Token token);
             void accessTokenRecieved(OAuthNS::Token token);
-            void newMessagesLoaded(QList<int> messageIds);
         };
 
     }

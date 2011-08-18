@@ -27,12 +27,13 @@
 */
 
 #include "Message.h"
+#include <QDateTime>
 #include "Yawner.h"
 
 namespace YammerNS {
 
     Message::Message(QObject *parent) :
-        Abstract(parent)
+        Abstract(parent), _timestamp(0)
     {
     }
 
@@ -70,9 +71,18 @@ namespace YammerNS {
                 );
     }
 
-    bool Message::isComment()
+    long Message::getTimestamp()
     {
-        return getParentId() != 0;
+        if (_timestamp == 0) {
+            QDateTime time = QDateTime::fromString(
+                        getData("created_at").toString(),
+                        QString("yyyy/MM/dd hh:mm:ss +0000")
+            );
+            if (time.isValid()) {
+                _timestamp = time.toTime_t();
+            }
+        }
+        return _timestamp;
     }
 
 }

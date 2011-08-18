@@ -53,8 +53,18 @@ namespace YawnerNS {
             explicit MessageWidget(YammerNS::Message *message, QWidget *parent = 0);
             ~MessageWidget();
 
+            YammerNS::Message* getMessage();
+
+            bool isTimestampLessThan(MessageWidget* other);
+            bool isTimestampGreaterThan(MessageWidget* other);
+
         private:
             Ui::MessageWidget *_ui;
+
+        signals:
+            void threadLinkClicked(int threadId);
+            void userLinkClicked(int userId);
+            void webLinkClicked(QUrl url);
 
         public slots:
             void paintEvent(QPaintEvent *e);
@@ -63,6 +73,9 @@ namespace YawnerNS {
             void messageDataLoaded(YammerNS::Abstract *user);
             void userDataLoaded(YammerNS::Abstract *user);
         };
+
+        bool message_widget_timestamp_less_than(MessageWidget* left, MessageWidget* right);
+        bool message_widget_timestamp_greater_than(MessageWidget* left, MessageWidget* right);
 
     }
 }

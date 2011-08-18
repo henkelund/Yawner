@@ -66,7 +66,11 @@ namespace OAuthNS {
          * @param QMap<QString, QString> parameters
          * @param QObject *parent
          */
-        explicit Request(Method method, QString url, QMap<QString, QString> parameters, QObject *parent = 0);
+        explicit Request(
+            Method method,
+            QString url,
+            QMap<QString, QString> parameters = QMap<QString, QString>(),
+            QObject *parent = 0);
 
         /**
          *
@@ -205,6 +209,12 @@ namespace OAuthNS {
          *
          */
         QNetworkReply*  exec();
+
+        /**
+         *
+         * @return QUrl*
+         */
+        QUrl* getUrl();
 
     signals:
 

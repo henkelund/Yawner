@@ -32,7 +32,7 @@
 namespace YammerNS {
 
     Abstract::Abstract(QObject *parent) :
-        QObject(parent)
+        QObject(parent), _isLoaded(false)
     {
     }
 
@@ -48,15 +48,24 @@ namespace YammerNS {
         return true;
     }
 
-    bool Abstract::load(QVariantMap data)
+    bool Abstract::isLoaded()
     {
+        return _isLoaded;
+    }
+
+    bool Abstract::load(QVariantMap data, bool *isFirstLoad)
+    {
+        if (isFirstLoad != 0) {
+            *isFirstLoad = _isLoaded ? false : true;
+        }
         bool success = false;
-        if (success = _beforeLoad(&data)) {
+        if ((success = _beforeLoad(&data)) == true) {
             _data = data;
         }
-        if (success = (success && _afterLoad(&_data))) {
+        if ((success = (success && _afterLoad(&_data))) == true) {
             emit dataLoaded(this);
         }
+        _isLoaded = true;
         return success;
     }
 
@@ -64,22 +73,4 @@ namespace YammerNS {
     {
         return _data.value(key);
     }
-
-    bool Abstract::loadJson(Abstract* obj, QString json)
-    {
-        if (obj == 0)
-            return false;
-
-        QScriptEngine engine;
-        QScriptValue jObj = engine.evaluate(QString("(").append(json).append(")"));
-        if (!jObj.isObject())
-            return false;
-
-        QVariant data = jObj.toVariant();
-        if (!data.isValid())
-            return false;
-
-        return obj->load(data.toMap());
-    }
-
 }

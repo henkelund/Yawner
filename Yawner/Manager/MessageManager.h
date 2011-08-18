@@ -50,17 +50,26 @@ namespace YawnerNS {
             QMap<int, YammerNS::Message*> _messageIndex;
 
         public:
+
+            enum Filter {None, OlderThan, NewerThan};
+
             explicit MessageManager(QObject *parent = 0);
 
             void init();
 
             YammerNS::Message* getMessageById(int id, bool *created = 0);
 
+            QList<YammerNS::Message*> getMessagesByAttribute(QString key, QVariant value);
+
+            QList<YammerNS::Message*> getThreadMessages(int threadId);
+
+            void requestMessages(Filter filter = None, QVariant value = QVariant());
+
         signals:
             void newMessagesLoaded(QList<int> messageIds);
 
         public slots:
-            void fetchMessages();
+            void requestThreadMessages(int threadId);
             void messagesRecieved(OAuthNS::Response* response);
 
         };

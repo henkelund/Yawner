@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network script
+QT       += core gui network script webkit
 
 TARGET = Yawner
 TEMPLATE = app
@@ -32,7 +32,9 @@ SOURCES += main.cpp\
     Yammer/Abstract.cpp \
     Yawner/Ui/MessageText.cpp \
     Yawner/Manager/MessageManager.cpp \
-    Yawner/Manager/NotificationManager.cpp
+    Yawner/Manager/NotificationManager.cpp \
+    Yawner/Ui/View/AbstractView.cpp \
+    Yawner/Ui/View/FeedView.cpp
 
 HEADERS  += Yawner/Ui/MainWindow.h \
     OAuth/Consumer.h \
@@ -53,7 +55,9 @@ HEADERS  += Yawner/Ui/MainWindow.h \
     Yammer/Abstract.h \
     Yawner/Ui/MessageText.h \
     Yawner/Manager/MessageManager.h \
-    Yawner/Manager/NotificationManager.h
+    Yawner/Manager/NotificationManager.h \
+    Yawner/Ui/View/AbstractView.h \
+    Yawner/Ui/View/FeedView.h
 
 FORMS    += Yawner/Ui/mainwindow.ui \
     Yawner/Ui/messagewidget.ui

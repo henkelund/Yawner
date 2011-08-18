@@ -33,6 +33,7 @@
 #include <QDesktopServices>
 #include <QTimer>
 #include <QBoxLayout>
+#include <QPropertyAnimation>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
@@ -44,9 +45,17 @@ namespace YawnerNS {
         MainWindow::MainWindow(QWidget *parent) :
             QMainWindow(parent),
             _ui(new Ui::MainWindow),
-            _yawner(Yawner::getInstance())
+            _yawner(Yawner::getInstance()),
+            _threadWidgets()
         {
             _ui->setupUi(this);
+            _ui->feedView->init();
+            connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
+            connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
+            connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
+            showView(_ui->feedView, false);
+            connect(_ui->threadBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
+            connect(_ui->userBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
 
             QFile styleSheet(QString(":/yawner.css"));
             QString css;
@@ -90,10 +99,10 @@ namespace YawnerNS {
             }
             else {
                 _yawner->getYammerApi()->setAccessToken(accessToken);
-                _yawner->getMessageManager();
                 connect(
                     _yawner->getMessageManager(),
                     SIGNAL(newMessagesLoaded(QList<int>)),
+                    _ui->feedView,
                     SLOT(newMessagesLoaded(QList<int>))
                 );
                 QTimer *timer = new QTimer(this);
@@ -134,30 +143,95 @@ namespace YawnerNS {
             }
         }
 
-        void MainWindow::newMessagesLoaded(QList<int> messageIds)
-        {
-            QListIterator<int> it(messageIds);
-            it.toBack();
-            while (it.hasPrevious()) {
-                YammerNS::Message *message = _yawner->getMessageManager()->getMessageById(it.previous());
-                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(message, _ui->messageList);
-                QVBoxLayout *layout = static_cast<QVBoxLayout*>(_ui->messageList->layout());
-                layout->insertWidget(0, mWidget);
-                if (!it.hasPrevious()) {
-                    _yawner->getNotificationManager()->show(
-                        QString("Yawner"), //message->getUser()->getData("full_name").toString(),
-                        message->getData("body").toMap().value("plain").toString()
-                    );
-                }
-            }
-            update();
-        }
-
         void MainWindow::fetchMessages()
         {
             statusBar()->showMessage(QString("Fetching messages.."), 3000);
-            _yawner->getMessageManager();
+            _yawner->getMessageManager()->requestMessages(YawnerNS::ManagerNS::MessageManager::NewerThan, _ui->feedView->getNewestId());
+        }
+
+        void MainWindow::showThread(int threadId)
+        {
+            QBoxLayout *layout = static_cast<QBoxLayout*>(_ui->threadList->layout());
+            while (_threadWidgets.count() > 0) {
+                YawnerNS::UiNS::MessageWidget *mWidget = _threadWidgets.takeAt(0);
+                layout->removeWidget(mWidget);
+                delete mWidget;
+            }
+
+            QList<YammerNS::Message*> messages = _yawner->getMessageManager()->getThreadMessages(threadId);
+            QListIterator<YammerNS::Message*> it(messages);
+            while (it.hasNext()) {
+                YammerNS::Message *message = it.next();
+                YawnerNS::UiNS::MessageWidget *mWidget = new YawnerNS::UiNS::MessageWidget(message, _ui->threadList);
+                _threadWidgets.append(mWidget);
+                layout->addWidget(mWidget);
+            }
+            showView(_ui->threadView);
+        }
+
+        void MainWindow::showUser(int userId)
+        {
+            showView(_ui->userView);
+        }
+
+        void MainWindow::showBrowser(QUrl url)
+        {
+            QDesktopServices::openUrl(url);
+        }
+
+        void MainWindow::showFeed()
+        {
+            showView(_ui->feedView);
+        }
+
+        void MainWindow::showView(QWidget *widget, bool animate)
+        {
+            QListIterator<QObject*> it(static_cast<QList<QObject*> >(_ui->bodyWidget->children()));
+
+            while (it.hasNext()) {
+                QObject *nextObject = it.next();
+                // this kind of casting and type checking feels ugly
+                if (!nextObject->isWidgetType()) {
+                    continue;
+                }
+
+                YawnerNS::UiNS::ViewNS::AbstractView *view = static_cast<YawnerNS::UiNS::ViewNS::AbstractView*>(nextObject);
+
+                QPropertyAnimation *animation = 0;
+                if (animate) {
+                    animation = new QPropertyAnimation(view, "maximumWidth");
+                    animation->setDuration(500);
+                    animation->setEasingCurve(QEasingCurve::InOutCubic);
+                }
+
+                if (view == widget) {
+                    view->beforeShow();
+                    view->setHidden(false);
+                    if (animate) {
+                        animation->setStartValue(view->width());
+                        animation->setEndValue(width());
+                        connect(animation, SIGNAL(finished()), view, SLOT(maximized()));
+                    }
+                    else {
+                        view->maximized();
+                    }
+                }
+                else {
+                    view->beforeHide();
+                    view->setDisabled(true);
+                    if (animate) {
+                        animation->setStartValue(width());
+                        animation->setEndValue(0);
+                        connect(animation, SIGNAL(finished()), view, SLOT(minimized()));
+                    }
+                    else {
+                        view->minimized();
+                    }
+                }
+                if (animate) {
+                    animation->start(QAbstractAnimation::DeleteWhenStopped);
+                }
+            }
         }
     }
 }
-

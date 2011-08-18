@@ -42,18 +42,13 @@ namespace YawnerNS {
 
         protected:
 
-            bool _isLoaded;
             QMap<int, YammerNS::User*> _userIndex;
-
-            void _assertLoaded();
 
         public:
 
             explicit UserManager(QObject *parent);
 
             void init();
-
-            void load();
 
             YammerNS::User* getUserById(int id, bool *created = 0);
 

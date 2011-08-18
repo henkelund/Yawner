@@ -18,44 +18,50 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category Yawner/Manager
-* @package Yawner/Manager
+* @category Yawner/Ui/View
+* @package Yawner/Ui/View
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
-* @link https://github.com/henkelund/Yawner
+* @link http://yawner.henkehedelund.se/
 */
 
-#ifndef NOTIFICATIONMANAGER_H
-#define NOTIFICATIONMANAGER_H
+#ifndef ABSTRACTVIEW_H
+#define ABSTRACTVIEW_H
 
-#include "../Manager.h"
-#include <QSystemTrayIcon>
+#include <QScrollArea>
 
 namespace YawnerNS {
-    namespace ManagerNS {
+    namespace UiNS {
+        namespace ViewNS {
 
-        class NotificationManager : public YawnerNS::Manager
-        {
-            Q_OBJECT
-        protected:
+            class AbstractView : public QScrollArea
+            {
+                Q_OBJECT
+            private:
+                bool _isInitialized;
 
-            QSystemTrayIcon *_icon;
+            protected:
+                virtual void _init();
 
-            virtual void _init();
+            public:
+                explicit AbstractView(QWidget *parent = 0);
 
-        public:
-            explicit NotificationManager(QObject *parent = 0);
+                void init();
 
-            void show(QString title, QString message);
+                virtual void beforeShow();
+                virtual void beforeHide();
 
-        signals:
+            signals:
 
-        public slots:
+            public slots:
+                void paintEvent(QPaintEvent *event);
+                void minimized();
+                void maximized();
+            };
 
-        };
-
+        }
     }
 }
 
-#endif // NOTIFICATIONMANAGER_H
+#endif // ABSTRACTVIEW_H

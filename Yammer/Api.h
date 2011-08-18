@@ -46,6 +46,7 @@ namespace YammerNS {
         OAuthNS::Token _accessToken;
 
     public:
+
         explicit Api(OAuthNS::Consumer consumer, QObject *parent = 0);
 
         void setAccessToken(OAuthNS::Token token);
@@ -54,7 +55,18 @@ namespace YammerNS {
 
         void getAccessToken(OAuthNS::Token requestToken, QString verifyer);
 
-        OAuthNS::Request* get(const char* resource, QObject* recieverObject, const char* recieverMethod);
+        OAuthNS::Request* get(
+            QUrl url,
+            QObject* recieverObject,
+            const char* recieverMethod
+        );
+
+        OAuthNS::Request* get(
+            QString resource,
+            QObject* recieverObject,
+            const char* recieverMethod,
+            QMap<QString, QString> params = QMap<QString, QString>()
+        );
 
     signals:
         void requestTokenRecieved(OAuthNS::Token token);

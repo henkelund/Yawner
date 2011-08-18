@@ -39,6 +39,9 @@ namespace YammerNS {
     class Message : public Abstract
     {
         Q_OBJECT
+    private:
+        long _timestamp;
+
     protected:
         virtual bool _beforeLoad(QVariantMap *data);
 
@@ -53,7 +56,7 @@ namespace YammerNS {
 
         User* getUser();
 
-        bool isComment();
+        long getTimestamp();
 
     signals:
 

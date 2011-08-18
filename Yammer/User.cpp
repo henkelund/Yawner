@@ -81,7 +81,7 @@ namespace YammerNS {
                     Yawner::getInstance()
                         ->getYammerApi()
                         ->get(
-                            mugshotUrl.toStdString().c_str(),
+                            QUrl(mugshotUrl),
                             this, SLOT(imageRecieved(OAuthNS::Response*))
                         );
                 }
