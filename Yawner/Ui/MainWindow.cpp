@@ -34,10 +34,16 @@
 #include <QTimer>
 #include <QBoxLayout>
 #include <QPropertyAnimation>
+#include <QPixmap>
+#include <QImage>
+#include <QPoint>
+#include <QRegion>
+#include <QImageWriter>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
 #include "Yawner/Ui/MessageWidget.h"
+#include "Yawner/Ui/View/Snapshot.h"
 
 namespace YawnerNS {
     namespace UiNS {
@@ -186,51 +192,65 @@ namespace YawnerNS {
 
         void MainWindow::showView(QWidget *widget, bool animate)
         {
-            QListIterator<QObject*> it(static_cast<QList<QObject*> >(_ui->bodyWidget->children()));
+            int animationSpeed = 500;
+            QEasingCurve animationCurve = QEasingCurve::InOutExpo;
+
+            YawnerNS::UiNS::ViewNS::Snapshot *snapshot = 0;
+            if (animate) {
+                snapshot = new YawnerNS::UiNS::ViewNS::Snapshot(_ui->bodyWidget);
+            }
+
+            QBoxLayout *layout = static_cast<QBoxLayout*>(_ui->bodyWidget->layout());
+
+            QListIterator<YawnerNS::UiNS::ViewNS::AbstractView*> it(
+                static_cast<QList<YawnerNS::UiNS::ViewNS::AbstractView*> >(
+                    _ui->bodyWidget->findChildren<YawnerNS::UiNS::ViewNS::AbstractView*>()
+                )
+            );
+
+            int showIndex = 0;
+            int hideIndex = 0;
 
             while (it.hasNext()) {
-                QObject *nextObject = it.next();
-                // this kind of casting and type checking feels ugly
-                if (!nextObject->isWidgetType()) {
-                    continue;
-                }
-
-                YawnerNS::UiNS::ViewNS::AbstractView *view = static_cast<YawnerNS::UiNS::ViewNS::AbstractView*>(nextObject);
-
-                QPropertyAnimation *animation = 0;
-                if (animate) {
-                    animation = new QPropertyAnimation(view, "maximumWidth");
-                    animation->setDuration(500);
-                    animation->setEasingCurve(QEasingCurve::InOutCubic);
-                }
+                YawnerNS::UiNS::ViewNS::AbstractView *view = it.next();
 
                 if (view == widget) {
+                    showIndex = layout->indexOf(view);
                     view->beforeShow();
-                    view->setHidden(false);
                     if (animate) {
+                        QPropertyAnimation *animation = new QPropertyAnimation(view, "maximumWidth");
+                        animation->setDuration(animationSpeed);
+                        animation->setEasingCurve(animationCurve);
                         animation->setStartValue(view->width());
                         animation->setEndValue(width());
+                        animation->start(QAbstractAnimation::DeleteWhenStopped);
                         connect(animation, SIGNAL(finished()), view, SLOT(maximized()));
                     }
                     else {
                         view->maximized();
                     }
                 }
-                else {
+                else if (!view->isHidden() || view->width() > 0) {
+                    hideIndex = layout->indexOf(view);
                     view->beforeHide();
-                    view->setDisabled(true);
-                    if (animate) {
-                        animation->setStartValue(width());
-                        animation->setEndValue(0);
-                        connect(animation, SIGNAL(finished()), view, SLOT(minimized()));
-                    }
-                    else {
-                        view->minimized();
-                    }
+                    view->setMaximumWidth(0);
+                    view->minimized();
                 }
-                if (animate) {
-                    animation->start(QAbstractAnimation::DeleteWhenStopped);
-                }
+            }
+
+            if (animate) {
+                layout->insertWidget(
+                    hideIndex < showIndex ? showIndex : showIndex + 1,
+                    snapshot
+                );
+                snapshot->setVisible(true);
+                QPropertyAnimation *animation = new QPropertyAnimation(snapshot, "maximumWidth");
+                animation->setDuration(animationSpeed);
+                animation->setEasingCurve(animationCurve);
+                animation->setStartValue(width());
+                animation->setEndValue(0);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                connect(animation, SIGNAL(finished()), snapshot, SLOT(animationFinished()));
             }
         }
     }

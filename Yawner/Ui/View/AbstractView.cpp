@@ -29,7 +29,6 @@
 #include "AbstractView.h"
 #include <QPainter>
 #include <QLinearGradient>
-#include <QScrollBar>
 
 namespace YawnerNS {
     namespace UiNS {
@@ -38,8 +37,6 @@ namespace YawnerNS {
             AbstractView::AbstractView(QWidget *parent) :
                 QScrollArea(parent), _isInitialized(false)
             {
-                //viewport()->setContentsMargins(0, 0, 0, 0);
-                //verticalScrollBar()->setContentsMargins(0, 0, 0, 0);
             }
 
             void AbstractView::_init()
@@ -87,12 +84,12 @@ namespace YawnerNS {
 
             void AbstractView::beforeShow()
             {
-
+                setHidden(false);
             }
 
             void AbstractView::beforeHide()
             {
-
+                setDisabled(true);
             }
         }
     }

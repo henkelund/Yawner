@@ -35,11 +35,13 @@
 
 namespace YammerNS {
 
+    int User::_instanceCount = 0;
     QPixmap* User::_defaultSmallImage = 0;
 
     User::User(QObject *parent) :
         Abstract(parent), _smallImage(0), _hasPendingSmallImageRequest(false)
     {
+        ++_instanceCount;
     }
 
     User::~User()
@@ -47,11 +49,8 @@ namespace YammerNS {
         if (_smallImage != 0) {
             delete _smallImage;
         }
-    }
-
-    void User::cleanUp()
-    {
-        if (_defaultSmallImage != 0) {
+        --_instanceCount;
+        if (_instanceCount == 0 && _defaultSmallImage != 0) {
             delete _defaultSmallImage;
             _defaultSmallImage = 0;
         }
@@ -88,7 +87,7 @@ namespace YammerNS {
 
                 // while waiting for download -> return default image
                 if (_defaultSmallImage == 0) {
-                    _defaultSmallImage = new QPixmap(QString(":/icon.svg"));
+                    _defaultSmallImage = new QPixmap(QString(":/icon48.png"));
                 }
                 return *_defaultSmallImage;
             }

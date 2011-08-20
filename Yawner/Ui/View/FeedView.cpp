@@ -103,6 +103,7 @@ namespace YawnerNS {
             void FeedView::beforeShow()
             {
                 _syncLayout();
+                AbstractView::beforeShow();
             }
 
             void FeedView::newMessagesLoaded(QList<int> messageIds)

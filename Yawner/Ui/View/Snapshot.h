@@ -18,52 +18,44 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category Yammer
-* @package Yammer
+* @category Yawner/Ui/View
+* @package Yawner/Ui/View
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
 * @link http://yawner.henkehedelund.se/
 */
 
-#ifndef USER_H
-#define USER_H
+#ifndef SNAPSHOT_H
+#define SNAPSHOT_H
 
-#include "Abstract.h"
-#include <QObject>
-#include <QScriptValue>
-#include <QPixmap>
-#include "../OAuth/Response.h"
+#include <QWidget>
+#include <QImage>
 
-namespace YammerNS {
+namespace YawnerNS {
+    namespace UiNS {
+        namespace ViewNS {
 
-    class User : public Abstract
-    {
-        Q_OBJECT
+            class Snapshot : public QWidget
+            {
+                Q_OBJECT
 
-    private:
-        static int      _instanceCount;
-        QPixmap         *_smallImage;
-        bool            _hasPendingSmallImageRequest;
-        static QPixmap  *_defaultSmallImage;
+            private:
+                QImage _image;
 
-        QString _getImageFileName();
+            public:
+                explicit Snapshot(QWidget *target, QWidget *parent = 0);
 
-    public:
-        explicit User(QObject *parent = 0);
+            signals:
 
-        virtual ~User();
+            public slots:
+                void paintEvent(QPaintEvent *event);
+                void animationFinished();
 
-        int getId();
+            };
 
-        QPixmap getSmallImage();
-
-    signals:
-
-    public slots:
-        void imageRecieved(OAuthNS::Response *response);
-    };
-
+        }
+    }
 }
 
-#endif // USER_H
+#endif // SNAPSHOT_H

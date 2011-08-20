@@ -9,5 +9,6 @@
         <file>icon512.png</file>
         <file>yawner.css</file>
         <file>sizegrip.png</file>
+        <file>icon48.png</file>
     </qresource>
 </RCC>

@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     Yawner/Manager/MessageManager.cpp \
     Yawner/Manager/NotificationManager.cpp \
     Yawner/Ui/View/AbstractView.cpp \
-    Yawner/Ui/View/FeedView.cpp
+    Yawner/Ui/View/FeedView.cpp \
+    Yawner/Ui/View/Snapshot.cpp
 
 HEADERS  += Yawner/Ui/MainWindow.h \
     OAuth/Consumer.h \
@@ -57,7 +58,8 @@ HEADERS  += Yawner/Ui/MainWindow.h \
     Yawner/Manager/MessageManager.h \
     Yawner/Manager/NotificationManager.h \
     Yawner/Ui/View/AbstractView.h \
-    Yawner/Ui/View/FeedView.h
+    Yawner/Ui/View/FeedView.h \
+    Yawner/Ui/View/Snapshot.h
 
 FORMS    += Yawner/Ui/mainwindow.ui \
     Yawner/Ui/messagewidget.ui
