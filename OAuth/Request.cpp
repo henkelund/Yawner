@@ -42,9 +42,19 @@ namespace OAuthNS {
     const QString Request::VERSION = QString("1.0");
     QNetworkAccessManager *Request::_networkAccessManager = 0;
 
-    Request::Request(Method method, QString url, QMap<QString, QString> parameters, QObject *parent) :
-        QObject(parent), _method(method), _url(QUrl(url)), _parameters(parameters), _baseString(), _reply(0)
+    Request::Request(Method method, QString url, QMap<QString, QString> *parameters, QObject *parent) :
+        QObject(parent),
+        _method(method),
+        _url(QUrl(url)),
+        _parameters(),
+        _baseString(),
+        _body(""),
+        _reply(0)
     {
+        if (parameters != 0) {
+            _parameters = *parameters;
+        }
+
         if (_url.hasQuery()) {
             for (int i = 0; i < _url.queryItems().length(); ++i) {
                 QPair<QString, QString> pair = _url.queryItems().at(i);
@@ -82,7 +92,7 @@ namespace OAuthNS {
             }
         }
 
-        return new Request(method, url, defaultParameters, parent);
+        return new Request(method, url, &defaultParameters, parent);
     }
 
     /* static */
@@ -239,7 +249,10 @@ namespace OAuthNS {
     QNetworkReply* Request::exec()
     {
         QNetworkRequest request(_url);
-        request.setRawHeader("Authorization", toHeader().toUtf8());
+        QByteArray authHeader = toHeader().toUtf8();
+        if (!authHeader.isEmpty()) {
+            request.setRawHeader("Authorization", authHeader);
+        }
         request.setHeader(QNetworkRequest::ContentTypeHeader, "tex/xml");
 
         if (_reply != 0 && _reply->parent() == this) {
@@ -248,9 +261,9 @@ namespace OAuthNS {
         }
 
         switch (_method) {
-            case POST: _reply = getNetworkAccessManager()->post(request, toPostData().toUtf8());
+            case POST: _reply = getNetworkAccessManager()->post(request, _body);
                 break;
-            case PUT: _reply = getNetworkAccessManager()->put(request, toPostData().toUtf8());
+            case PUT: _reply = getNetworkAccessManager()->put(request, _body);
                 break;
             case DELETE: _reply = getNetworkAccessManager()->deleteResource(request);
                 break;
@@ -266,6 +279,11 @@ namespace OAuthNS {
     QUrl* Request::getUrl()
     {
         return &_url;
+    }
+
+    void Request::setBody(QByteArray body)
+    {
+        _body = body;
     }
 
     void Request::replyFinished()

@@ -105,10 +105,10 @@ namespace YawnerNS {
                     _ui->feedView,
                     SLOT(newMessagesLoaded(QList<int>))
                 );
-                QTimer *timer = new QTimer(this);
+                /*QTimer *timer = new QTimer(this);
                 timer->setInterval(60000);
                 connect(timer, SIGNAL(timeout()), this, SLOT(fetchMessages()));
-                timer->start();
+                timer->start();*/
             }
         }
 

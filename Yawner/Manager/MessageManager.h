@@ -70,6 +70,7 @@ namespace YawnerNS {
 
         public slots:
             void requestThreadMessages(int threadId);
+            void updateMessagesData(QList<QVariant> messageList);
             void messagesRecieved(OAuthNS::Response* response);
 
         };

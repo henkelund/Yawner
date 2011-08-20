@@ -31,6 +31,7 @@
 #include <QUrl>
 #include <QScriptEngine>
 #include <QScriptValueIterator>
+#include <QTimer>
 #include "../OAuth/Consumer.h"
 #include "../OAuth/SignatureMethod/Plaintext.h"
 #include "../OAuth/Request.h"
@@ -40,7 +41,7 @@
 namespace YammerNS {
 
     Api::Api(OAuthNS::Consumer consumer, QObject *parent) :
-        QObject(parent), _consumer(consumer), _accessToken()
+        QObject(parent), _consumer(consumer), _accessToken(), _realtimeSettings()
     {
     }
 
@@ -98,6 +99,153 @@ namespace YammerNS {
         );
     }
 
+    bool Api::realtimeSubscribe(QMap<QString, QVariant> settings)
+    {
+        if (_realtimeSettings.isEmpty()) {
+            _realtimeSettings = settings;
+            _realtimeRequest();
+            return true;
+        }
+        return false;
+    }
+
+    OAuthNS::Request* Api::_realtimeRequest()
+    {
+        int id = 0;
+
+        QString url = _realtimeSettings.value("uri").toString();
+        QString clientId =
+                _realtimeSettings.value("clientId").canConvert(QVariant::String) ?
+                    _realtimeSettings.value("clientId").toString() : QString();
+        QString channelId =
+                _realtimeSettings.value("channel_id").canConvert(QVariant::String) ?
+                    _realtimeSettings.value("channel_id").toString() : QString();
+        bool subscribed = _realtimeSettings.contains("subscriptions") &&
+                _realtimeSettings.value("subscriptions").canConvert(QVariant::List);
+        QList<QVariant> body;
+
+        if (_realtimeSettings.contains("id") && _realtimeSettings.value("id").canConvert(QVariant::Int)) {
+            bool ok = false;
+            id = _realtimeSettings.value("id").toInt(&ok);
+            if (!ok) {
+                id = 0;
+            }
+        }
+
+        if (0 == id || clientId.isEmpty()) {
+            url.append("handshake");
+
+            QMap<QString, QVariant> ext;
+            ext.insert("token", _realtimeSettings.value("authentication_token").toString());
+            QMap<QString, QVariant> bodyObject;
+            bodyObject.insert("ext", ext);
+            bodyObject.insert("version", "1.0");
+            bodyObject.insert("minimumVersion", "0.9");
+            bodyObject.insert("channel", "/meta/handshake");
+            QList<QVariant> supportedConnectionTypes;
+            supportedConnectionTypes.append("long-polling");
+            bodyObject.insert("supportedConnectionTypes", supportedConnectionTypes);
+            bodyObject.insert("id", ++id);
+            body.append(bodyObject);
+        }
+        else if (!subscribed) {
+            QMap<QString, QVariant> bodyObject;
+            bodyObject.insert("channel", "/meta/subscribe");
+            bodyObject.insert("subscription", QString("/feeds/%1/primary").arg(channelId));
+            bodyObject.insert("id", ++id);
+            bodyObject.insert("clientId", clientId);
+            body.append(bodyObject);
+            QMap<QString, QVariant> bodyObject2;
+            bodyObject2.insert("channel", "/meta/subscribe");
+            bodyObject2.insert("subscription", QString("/feeds/%1/secondary").arg(channelId));
+            bodyObject2.insert("id", ++id);
+            bodyObject2.insert("clientId", clientId);
+            body.append(bodyObject2);
+        }
+        else {
+            url.append("connect");
+
+            QMap<QString, QVariant> bodyObject;
+            bodyObject.insert("channel", "/meta/connect");
+            bodyObject.insert("connectionType", "long-polling");
+            bodyObject.insert("id", ++id);
+            bodyObject.insert("clientId", clientId);
+            body.append(bodyObject);
+        }
+
+        _realtimeSettings.insert("id", id);
+
+        QScriptEngine engine;
+        QStringList jsonBody;
+        QListIterator<QVariant> it(body);
+        while (it.hasNext()) {
+            QScriptValueList args;
+            args.append(engine.toScriptValue(it.next()));
+            jsonBody.append(engine.evaluate("JSON.stringify").call(engine.globalObject(), args).toString());
+        }
+
+        OAuthNS::Request *request = new OAuthNS::Request(OAuthNS::Request::POST, url);
+        request->setBody(QString("[%1]").arg(jsonBody.join(",")).toUtf8());
+        request->exec();
+
+        connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            this,
+            SLOT(_realtimeResponse(OAuthNS::Response*))
+        );
+
+        return request;
+    }
+
+    void Api::_realtimeResponse(OAuthNS::Response *response)
+    {
+        response->deleteLater();
+        QVariant content = response->getContent();
+        QList<QVariant> contentObjects = content.toList();
+        QListIterator<QVariant> it(contentObjects);
+        while (it.hasNext()) {
+            QMap<QString, QVariant> object = it.next().toMap();
+            if (object.contains("successful") && object.value("successful").toBool() == true) {
+                QString channel = object.contains("channel") ?
+                            object.value("channel").toString() : QString();
+                if (channel == "/meta/handshake") {
+                    _realtimeSettings.insert("clientId", object.value("clientId").toString());
+                }
+                else if (channel == "/meta/subscribe") {
+                    if (!_realtimeSettings.contains("subscriptions") ||
+                                    !_realtimeSettings.value("subscriptions").canConvert(QVariant::List)) {
+                        _realtimeSettings.insert("subscriptions", QVariantList());
+                    }
+                    QVariantList subsrciptions = _realtimeSettings.value("subscriptions").toList();
+                    subsrciptions.append(object.value("subscription").toString());
+                    _realtimeSettings.insert("subscriptions", subsrciptions);
+                }
+                else if (channel == "/meta/connect") {
+                    // let's just reconnect
+                }
+            }
+            else if (object.contains("data") && object.value("data").canConvert(QVariant::Map)) {
+                QMap<QString, QVariant> data = object.value("data").toMap();
+                if (data.contains("data") && data.value("data").canConvert(QVariant::Map)) {
+                    QMap<QString, QVariant> dataData = data.value("data").toMap();
+                    if (dataData.contains("messages") && dataData.value("messages").canConvert(QVariant::List)) {
+                        emit realtimeMessageList(dataData.value("messages").toList());
+                    }
+                }
+            }
+            else {
+                _realtimeSettings.clear();
+                // emit realtime dead
+                return;
+            }
+
+            if (!it.hasNext()) {
+                QTimer::singleShot(0, this, SLOT(_realtimeRequest()));
+            }
+        }
+    }
+
     OAuthNS::Request* Api::get(
         QUrl url,
         QObject* recieverObject,
@@ -127,7 +275,7 @@ namespace YammerNS {
         QString resource,
         QObject *recieverObject,
         const char* recieverMethod,
-        QMap<QString, QString> params)
+        QMap<QString, QString> *params)
     {
         //create request
         OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
@@ -136,10 +284,12 @@ namespace YammerNS {
             QString("https://www.yammer.com/api/v1/%1.json").arg(resource)
         );
 
-        QMapIterator<QString, QString> paramIt(params);
-        while (paramIt.hasNext()) {
-            paramIt.next();
-            request->getUrl()->addQueryItem(paramIt.key(), paramIt.value());
+        if (params != 0) {
+            QMapIterator<QString, QString> paramIt(*params);
+            while (paramIt.hasNext()) {
+                paramIt.next();
+                request->getUrl()->addQueryItem(paramIt.key(), paramIt.value());
+            }
         }
 
         OAuthNS::SignatureMethodNS::Plaintext sm;
@@ -182,10 +332,6 @@ namespace YammerNS {
                     response->property("oauth_token_secret").toString()
                 )
             );
-        }
-        else if (response->getReplyObject()->property("is_call_request").isValid()) {
-
-            //qDebug(response->getRawContent().toStdString().c_str());
         }
 
         response->deleteLater();

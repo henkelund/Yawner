@@ -52,6 +52,7 @@ namespace OAuthNS {
         QUrl                            _url;
         QMap<QString, QString>          _parameters;
         QString                         _baseString;
+        QByteArray                      _body;
         static QNetworkAccessManager    *_networkAccessManager;
         QNetworkReply                   *_reply;
 
@@ -69,7 +70,7 @@ namespace OAuthNS {
         explicit Request(
             Method method,
             QString url,
-            QMap<QString, QString> parameters = QMap<QString, QString>(),
+            QMap<QString, QString> *parameters = 0,
             QObject *parent = 0);
 
         /**
@@ -215,6 +216,12 @@ namespace OAuthNS {
          * @return QUrl*
          */
         QUrl* getUrl();
+
+        /**
+         *
+         * @param QByteArray body
+         */
+        void setBody(QByteArray body);
 
     signals:
 

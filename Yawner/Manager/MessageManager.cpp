@@ -41,6 +41,12 @@ namespace YawnerNS {
         void MessageManager::init()
         {
             requestMessages();
+            connect(
+                _yawner()->getYammerApi(),
+                SIGNAL(realtimeMessageList(QList<QVariant>)),
+                this,
+                SLOT(updateMessagesData(QList<QVariant>))
+            );
         }
 
         void MessageManager::requestMessages(Filter filter, QVariant value)
@@ -66,7 +72,7 @@ namespace YawnerNS {
                 ->get(
                     "messages",
                     this, SLOT(messagesRecieved(OAuthNS::Response*)),
-                    params
+                    &params
                 );
         }
 
@@ -113,45 +119,57 @@ namespace YawnerNS {
             return getMessagesByAttribute(QString("thread_id"), QVariant(threadId));
         }
 
-        void MessageManager::messagesRecieved(OAuthNS::Response* response)
+        void MessageManager::updateMessagesData(QList<QVariant> messageList)
         {
-            response->deleteLater();
+            QList<int> newMessageIds;
+            QListIterator<QVariant> it(messageList);
+            while (it.hasNext()) {
 
-            if (response->getContent().canConvert(QVariant::Map)) {
+                QVariant messageListItem = it.next();
+                if (messageListItem.canConvert(QVariant::Map)) {
 
-                QList<int> newMessageIds;
+                    QMap<QString, QVariant> messageData = messageListItem.toMap();
+                    if (messageData.contains("id") &&
+                            messageData.value("id").canConvert(QVariant::Int)) {
 
-                QMap<QString, QVariant> responseObject = response->getContent().toMap();
-                if (responseObject.contains("messages") &&
-                        responseObject.value("messages").canConvert(QVariant::List)) {
-
-                    QList<QVariant> messageList = responseObject.value("messages").toList();
-                    QListIterator<QVariant> it(messageList);
-                    while (it.hasNext()) {
-
-                        QVariant messageListItem = it.next();
-                        if (messageListItem.canConvert(QVariant::Map)) {
-
-                            QMap<QString, QVariant> messageData = messageListItem.toMap();
-                            if (messageData.contains("id") &&
-                                    messageData.value("id").canConvert(QVariant::Int)) {
-
-                                int id = messageData.value("id").toInt();
-                                if (id > 0) {
-                                    YammerNS::Message *message = getMessageById(id);
-                                    bool firstLoad = false;
-                                    message->load(messageData, &firstLoad);
-                                    if (firstLoad == true) {
-                                        newMessageIds.append(id);
-                                    }
-                                }
+                        int id = messageData.value("id").toInt();
+                        if (id > 0) {
+                            YammerNS::Message *message = getMessageById(id);
+                            bool firstLoad = false;
+                            message->load(messageData, &firstLoad);
+                            if (firstLoad == true) {
+                                newMessageIds.append(id);
                             }
                         }
                     }
                 }
+            }
 
-                if (newMessageIds.count() > 0) {
-                    emit newMessagesLoaded(newMessageIds);
+            if (newMessageIds.count() > 0) {
+                emit newMessagesLoaded(newMessageIds);
+            }
+        }
+
+        void MessageManager::messagesRecieved(OAuthNS::Response* response)
+        {
+            response->deleteLater();
+            if (response->getContent().canConvert(QVariant::Map)) {
+
+                QMap<QString, QVariant> responseObject = response->getContent().toMap();
+
+                if (responseObject.contains("meta") && responseObject.value("meta").canConvert(QVariant::Map)) {
+                    QMap<QString, QVariant> meta = responseObject.value("meta").toMap();
+                    if (meta.contains("realtime") && meta.value("realtime").canConvert(QVariant::Map)) {
+                        QMap<QString, QVariant> realtime = meta.value("realtime").toMap();
+                        _yawner()->getYammerApi()->realtimeSubscribe(realtime);
+                    }
+                }
+
+                if (responseObject.contains("messages") &&
+                        responseObject.value("messages").canConvert(QVariant::List)) {
+
+                    QList<QVariant> messageList = responseObject.value("messages").toList();
+                    updateMessagesData(messageList);
                 }
             }
         }

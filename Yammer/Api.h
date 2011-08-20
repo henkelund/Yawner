@@ -41,9 +41,14 @@ namespace YammerNS {
     class Api : public QObject
     {
         Q_OBJECT
-    protected:
+    private:
         OAuthNS::Consumer _consumer;
         OAuthNS::Token _accessToken;
+        QMap<QString, QVariant> _realtimeSettings;
+
+    private slots:
+        OAuthNS::Request* _realtimeRequest();
+        void _realtimeResponse(OAuthNS::Response *response);
 
     public:
 
@@ -55,6 +60,8 @@ namespace YammerNS {
 
         void getAccessToken(OAuthNS::Token requestToken, QString verifyer);
 
+        bool realtimeSubscribe(QMap<QString, QVariant> settings);
+
         OAuthNS::Request* get(
             QUrl url,
             QObject* recieverObject,
@@ -65,12 +72,13 @@ namespace YammerNS {
             QString resource,
             QObject* recieverObject,
             const char* recieverMethod,
-            QMap<QString, QString> params = QMap<QString, QString>()
+            QMap<QString, QString> *params = 0
         );
 
     signals:
         void requestTokenRecieved(OAuthNS::Token token);
         void accessTokenRecieved(OAuthNS::Token token);
+        void realtimeMessageList(QList<QVariant> messageList);
 
     public slots:
         void responseRecieved(OAuthNS::Response *response);
