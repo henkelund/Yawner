@@ -39,6 +39,7 @@
 #include <QPoint>
 #include <QRegion>
 #include <QImageWriter>
+#include <QMessageBox>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
@@ -57,11 +58,12 @@ namespace YawnerNS {
             _ui->setupUi(this);
             _ui->feedView->init();
             connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
-            connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
+            //connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
             connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
             showView(_ui->feedView, false);
             connect(_ui->threadBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
             connect(_ui->userBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
+            connect(_ui->postSubmit, SIGNAL(clicked()), this, SLOT(submitClicked()));
 
             QFile styleSheet(QString(":/yawner.css"));
             QString css;
@@ -111,6 +113,14 @@ namespace YawnerNS {
                     _ui->feedView,
                     SLOT(newMessagesLoaded(QList<int>))
                 );
+                connect(
+                    _yawner->getMessageManager(),
+                    SIGNAL(replyToMessageChanged(int)),
+                    this,
+                    SLOT(replyToMessageChanged(int))
+                );
+                // we're using long-polling instead.
+                // maybe this should be kept as an alternative?
                 /*QTimer *timer = new QTimer(this);
                 timer->setInterval(60000);
                 connect(timer, SIGNAL(timeout()), this, SLOT(fetchMessages()));
@@ -152,7 +162,8 @@ namespace YawnerNS {
         void MainWindow::fetchMessages()
         {
             statusBar()->showMessage(QString("Fetching messages.."), 3000);
-            _yawner->getMessageManager()->requestMessages(YawnerNS::ManagerNS::MessageManager::NewerThan, _ui->feedView->getNewestId());
+            _yawner->getMessageManager()->requestMessages(
+                        YawnerNS::ManagerNS::MessageManager::NewerThan, _ui->feedView->getNewestId());
         }
 
         void MainWindow::showThread(int threadId)
@@ -173,11 +184,13 @@ namespace YawnerNS {
                 layout->addWidget(mWidget);
             }
             showView(_ui->threadView);
+            _ui->postInput->clearFocus();
         }
 
         void MainWindow::showUser(int userId)
         {
             showView(_ui->userView);
+            _ui->postInput->clearFocus();
         }
 
         void MainWindow::showBrowser(QUrl url)
@@ -192,8 +205,8 @@ namespace YawnerNS {
 
         void MainWindow::showView(QWidget *widget, bool animate)
         {
-            int animationSpeed = 500;
-            QEasingCurve animationCurve = QEasingCurve::InOutExpo;
+            int animationSpeed = 300;
+            QEasingCurve animationCurve = QEasingCurve::InOutSine;
 
             YawnerNS::UiNS::ViewNS::Snapshot *snapshot = 0;
             if (animate) {
@@ -251,6 +264,37 @@ namespace YawnerNS {
                 animation->setEndValue(0);
                 animation->start(QAbstractAnimation::DeleteWhenStopped);
                 connect(animation, SIGNAL(finished()), snapshot, SLOT(animationFinished()));
+            }
+        }
+
+        void MainWindow::submitClicked()
+        {
+            QString text = _ui->postInput->text();
+            if (text.trimmed().length() > 0) {
+                _ui->postInput->setText("");
+                _yawner->getMessageManager()->postMessage(text);
+            }
+            else {
+                QMessageBox dialog(this);
+                dialog.setWindowTitle("Error sending message");
+                dialog.setIconPixmap(QPixmap(QString(":/icon48.png")));
+                dialog.setText("Cannot post empty message.");
+                dialog.exec();
+            }
+        }
+
+        void MainWindow::replyToMessageChanged(int id)
+        {
+            if (id > 0) {
+                YammerNS::User *user =
+                        _yawner->getMessageManager()->getMessageById(id)->getUser();
+
+                _ui->postSubmit->setIcon(QIcon(user->getSmallImage()));
+                _ui->postSubmit->setToolTip(QString("Reply to %1").arg(user->getData("full_name").toString()));
+            }
+            else {
+                _ui->postSubmit->setIcon(QIcon(QString(":/icon.svg")));
+                _ui->postSubmit->setToolTip(QString("Post to feed"));
             }
         }
     }

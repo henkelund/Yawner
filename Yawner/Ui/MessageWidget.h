@@ -30,6 +30,7 @@
 #define MESSAGEWIDGET_H
 
 #include <QWidget>
+#include "../Manager/MessageManager.h"
 #include "../../Yammer/Message.h"
 #include "../../Yammer/User.h"
 
@@ -43,11 +44,13 @@ namespace YawnerNS {
         class MessageWidget : public QWidget
         {
             Q_OBJECT
-        protected:
+        private:
             YammerNS::Message *_message;
 
             QPixmap _decorateAvatar(QPixmap *avatar);
             QString _filterText(QString rawText);
+
+            YawnerNS::ManagerNS::MessageManager* _manager();
 
         public:
             explicit MessageWidget(YammerNS::Message *message, QWidget *parent = 0);
@@ -69,6 +72,8 @@ namespace YawnerNS {
         public slots:
             void paintEvent(QPaintEvent *e);
             void anchorClicked(QUrl url);
+            void avatarClicked(bool on);
+            void replyToMessageChanged(int id);
             void processMessageData();
             void messageDataLoaded(YammerNS::Abstract *user);
             void userDataLoaded(YammerNS::Abstract *user);

@@ -57,11 +57,15 @@ namespace YawnerNS {
             _ui(new Ui::MessageWidget)
         {
             _ui->setupUi(this);
-            _ui->user->layout()->setAlignment(_ui->avatar, Qt::AlignHCenter);
+            _ui->user->layout()->setAlignment(_ui->avatarButton, Qt::AlignHCenter);
             _ui->message->setOpenLinks(false);
             _ui->message->setOpenExternalLinks(false);
 
             connect(_ui->message, SIGNAL(anchorClicked(QUrl)), this, SLOT(anchorClicked(QUrl)));
+            connect(_ui->avatarButton, SIGNAL(clicked(bool)), this, SLOT(avatarClicked(bool)));
+            connect(_manager(), SIGNAL(replyToMessageChanged(int)), this, SLOT(replyToMessageChanged(int)));
+
+            replyToMessageChanged(_manager()->getReplyToMessageId());
 
             YammerNS::User* user = _message->getUser();
             if (user != 0) {
@@ -87,6 +91,11 @@ namespace YawnerNS {
             delete _ui;
         }
 
+        YawnerNS::ManagerNS::MessageManager* MessageWidget::_manager()
+        {
+            return Yawner::getInstance()->getMessageManager();
+        }
+
         YammerNS::Message* MessageWidget::getMessage()
         {
             return _message;
@@ -97,7 +106,7 @@ namespace YawnerNS {
             _ui->name->setText(_message->getUser()->getData("full_name").toString().replace(QString(" "), QString("\n")));
 
             QPixmap avatar = _message->getUser()->getSmallImage();
-            _ui->avatar->setPixmap(_decorateAvatar(&avatar));
+            _ui->avatarButton->setIcon(QIcon(_decorateAvatar(&avatar)));
 
             _ui->message->setHtml(_filterText(_message->getText()));
             update();
@@ -110,6 +119,7 @@ namespace YawnerNS {
 
         void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
         {
+            _ui->avatarButton->setToolTip(QString("Reply to %1").arg(user->getData("full_name").toString()));
             QTimer::singleShot(100, this, SLOT(processMessageData()));
         }
 
@@ -243,6 +253,16 @@ namespace YawnerNS {
             }
 
             return rawText.replace(QString("\n"), QString("<br />"));
+        }
+
+        void MessageWidget::avatarClicked(bool on)
+        {
+            _manager()->setReplyToMessage(on ? getMessage() : 0);
+        }
+
+        void MessageWidget::replyToMessageChanged(int id)
+        {
+            _ui->avatarButton->setChecked(id == getMessage()->getId());
         }
 
         bool MessageWidget::isTimestampLessThan(MessageWidget* other)

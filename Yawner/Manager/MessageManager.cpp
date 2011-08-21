@@ -34,7 +34,7 @@ namespace YawnerNS {
     namespace ManagerNS {
 
         MessageManager::MessageManager(QObject *parent) :
-            YawnerNS::Manager(parent), _messageIndex()
+            YawnerNS::Manager(parent), _messageIndex(), _replyToMessageId(-1)
         {
         }
 
@@ -117,6 +117,40 @@ namespace YawnerNS {
         QList<YammerNS::Message*> MessageManager::getThreadMessages(int threadId)
         {
             return getMessagesByAttribute(QString("thread_id"), QVariant(threadId));
+        }
+
+        int MessageManager::getReplyToMessageId()
+        {
+            return _replyToMessageId;
+        }
+
+        void MessageManager::setReplyToMessage(YammerNS::Message *message)
+        {
+            if (message == 0) {
+                _replyToMessageId = -1;
+            }
+            else {
+                _replyToMessageId = message->getId();
+            }
+            emit replyToMessageChanged(_replyToMessageId);
+        }
+
+        void MessageManager::postMessage(QString message)
+        {
+            QMap<QString, QString> params;
+            params.insert("body", message);
+            if (getReplyToMessageId() > 0) {
+                params.insert("replied_to_id", QString::number(getReplyToMessageId()));
+                setReplyToMessage(0);
+            }
+
+            OAuthNS::Request *request = _yawner()
+                ->getYammerApi()
+                ->post(
+                    "messages",
+                    this, SLOT(messagesRecieved(OAuthNS::Response*)),
+                    &params
+                );
         }
 
         void MessageManager::updateMessagesData(QList<QVariant> messageList)

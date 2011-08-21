@@ -50,9 +50,11 @@ namespace OAuthNS {
     protected:
         Method                          _method;
         QUrl                            _url;
+        QMap<QString, QString>          _authParameters;
         QMap<QString, QString>          _parameters;
         QString                         _baseString;
         QByteArray                      _body;
+        QString                         _contentType;
         static QNetworkAccessManager    *_networkAccessManager;
         QNetworkReply                   *_reply;
 
@@ -146,6 +148,13 @@ namespace OAuthNS {
 
         /**
          *
+         * @param QString key
+         * @param QString value
+         */
+        void            setAuthParameter(QString key, QString value);
+
+        /**
+         *
          * @param SignatureMethod *signatureMethod
          * @param Consumer consumer
          * @param Token token
@@ -219,9 +228,21 @@ namespace OAuthNS {
 
         /**
          *
+         * @return QByteArray
+         */
+        QByteArray getBody();
+
+        /**
+         *
          * @param QByteArray body
          */
         void setBody(QByteArray body);
+
+        /**
+         *
+         * @param QString type
+         */
+        void setContentType(QString type);
 
     signals:
 

@@ -75,6 +75,13 @@ namespace YammerNS {
             QMap<QString, QString> *params = 0
         );
 
+        OAuthNS::Request* post(
+            QString resource,
+            QObject* recieverObject,
+            const char* recieverMethod,
+            QMap<QString, QString> *params = 0
+        );
+
     signals:
         void requestTokenRecieved(OAuthNS::Token token);
         void accessTokenRecieved(OAuthNS::Token token);

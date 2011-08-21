@@ -79,7 +79,7 @@ namespace YawnerNS {
             void AbstractView::maximized()
             {
                 setMaximumWidth(0xffffff);
-                setDisabled(false);
+                //setDisabled(false);
             }
 
             void AbstractView::beforeShow()
@@ -89,7 +89,7 @@ namespace YawnerNS {
 
             void AbstractView::beforeHide()
             {
-                setDisabled(true);
+                //setDisabled(true);
             }
         }
     }

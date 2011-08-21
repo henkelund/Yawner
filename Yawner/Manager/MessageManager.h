@@ -39,7 +39,7 @@ namespace YawnerNS {
         class MessageManager : public YawnerNS::Manager
         {
             Q_OBJECT
-        protected:
+        private:
 
             /**
              * This map variable should hold all the message objects for the application
@@ -48,6 +48,8 @@ namespace YawnerNS {
              * @var QMap<int, Message*>
              */
             QMap<int, YammerNS::Message*> _messageIndex;
+
+            int _replyToMessageId;
 
         public:
 
@@ -65,8 +67,15 @@ namespace YawnerNS {
 
             void requestMessages(Filter filter = None, QVariant value = QVariant());
 
+            int getReplyToMessageId();
+
+            void setReplyToMessage(YammerNS::Message *message);
+
+            void postMessage(QString message);
+
         signals:
             void newMessagesLoaded(QList<int> messageIds);
+            void replyToMessageChanged(int id);
 
         public slots:
             void requestThreadMessages(int threadId);

@@ -51,7 +51,6 @@ namespace YawnerNS {
         public:
             explicit MainWindow(QWidget *parent = 0);
             ~MainWindow();
-
             void showView(QWidget *widget, bool animate = true);
 
         private:
@@ -67,6 +66,8 @@ namespace YawnerNS {
             void fetchMessages();
             void requestTokenRecieved(OAuthNS::Token token);
             void accessTokenRecieved(OAuthNS::Token token);
+            void submitClicked();
+            void replyToMessageChanged(int id);
         };
 
     }

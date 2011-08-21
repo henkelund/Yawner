@@ -82,7 +82,7 @@ namespace YammerNS {
             QString("https://www.yammer.com/oauth/access_token")
         );
 
-        request->setParameter(QString("oauth_verifier"), verifyer);
+        request->setAuthParameter(QString("oauth_verifier"), verifyer);
 
         OAuthNS::SignatureMethodNS::Plaintext sm;
         request->signRequest(&sm, _consumer, requestToken);
@@ -289,6 +289,51 @@ namespace YammerNS {
             while (paramIt.hasNext()) {
                 paramIt.next();
                 request->getUrl()->addQueryItem(paramIt.key(), paramIt.value());
+            }
+        }
+
+        OAuthNS::SignatureMethodNS::Plaintext sm;
+        request->signRequest(&sm, _consumer, _accessToken);
+        // OAuthNS::Response will take ownership of the reply object
+        QNetworkReply *reply = request->exec();
+        connect(
+            reply,
+            SIGNAL(downloadProgress(qint64,qint64)),
+            request,
+            SLOT(downloadProgress(qint64,qint64))
+        );
+        // register callback
+        connect(
+            request,
+            SIGNAL(responseRecieved(OAuthNS::Response*)),
+            recieverObject,
+            recieverMethod
+        );
+
+        return request;
+    }
+
+    OAuthNS::Request* Api::post(
+        QString resource,
+        QObject* recieverObject,
+        const char* recieverMethod,
+        QMap<QString, QString> *params)
+    {
+        //create request
+        OAuthNS::Request *request = OAuthNS::Request::fromConsumerAndToken(
+            _consumer,
+            _accessToken,
+            QString("https://www.yammer.com/api/v1/%1.json").arg(resource),
+            OAuthNS::Request::POST
+        );
+
+        request->setContentType("application/x-www-form-urlencoded");
+
+        if (params != 0) {
+            QMapIterator<QString, QString> paramIt(*params);
+            while (paramIt.hasNext()) {
+                paramIt.next();
+                request->setParameter(paramIt.key(), paramIt.value());
             }
         }
 

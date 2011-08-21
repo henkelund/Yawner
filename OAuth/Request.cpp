@@ -46,21 +46,21 @@ namespace OAuthNS {
         QObject(parent),
         _method(method),
         _url(QUrl(url)),
+        _authParameters(),
         _parameters(),
         _baseString(),
         _body(""),
+        _contentType("application/json"),
         _reply(0)
     {
         if (parameters != 0) {
-            _parameters = *parameters;
+            _authParameters = *parameters;
         }
 
         if (_url.hasQuery()) {
             for (int i = 0; i < _url.queryItems().length(); ++i) {
                 QPair<QString, QString> pair = _url.queryItems().at(i);
-                if (!_parameters.contains(pair.first)) { // don't overwrite given params
-                    _parameters.insert(pair.first, pair.second);
-                }
+                _parameters.insert(pair.first, pair.second);
             }
         }
     }
@@ -148,25 +148,30 @@ namespace OAuthNS {
         _parameters.insert(key, value);
     }
 
+    void Request::setAuthParameter(QString key, QString value)
+    {
+        _authParameters.insert(key, value);
+    }
+
     void Request::signRequest(SignatureMethod *signatureMethod, Consumer consumer, Token token)
     {
-        setParameter(QString("oauth_signature_method"), signatureMethod->getName());
+        setAuthParameter(QString("oauth_signature_method"), signatureMethod->getName());
         QString signature = buildSignature(signatureMethod, consumer, token);
-        setParameter("oauth_signature", signature);
+        setAuthParameter("oauth_signature", signature);
     }
 
     void Request::signRequest(SignatureMethod *signatureMethod, Consumer consumer)
     {
-        setParameter(QString("oauth_signature_method"), signatureMethod->getName());
+        setAuthParameter(QString("oauth_signature_method"), signatureMethod->getName());
         QString signature = buildSignature(signatureMethod, consumer, Token(QString(""), QString("")));
-        setParameter("oauth_signature", signature);
+        setAuthParameter("oauth_signature", signature);
     }
 
     QString Request::toHeader()
     {
         QString header("OAuth ");
         QStringList paramPairs;
-        QMapIterator<QString, QString> it(_parameters);
+        QMapIterator<QString, QString> it(_authParameters);
         while (it.hasNext()) {
             it.next();
             paramPairs.append(
@@ -183,13 +188,13 @@ namespace OAuthNS {
 
     QString Request::toPostData()
     {
-        return Util::buildParameterString(_parameters);
+        return Util::buildParameterString(_authParameters);
     }
 
     QUrl Request::toUrl()
     {
         QUrl url(getNormalizedHttpUrl());
-        QMapIterator<QString, QString> it(_parameters);
+        QMapIterator<QString, QString> it(_authParameters);
         while (it.hasNext()) {
             it.next();
             url.addQueryItem(it.key().toUtf8(), it.value().toUtf8());
@@ -199,7 +204,7 @@ namespace OAuthNS {
 
     QString Request::getSignableParameters()
     {
-        QMap<QString, QString> params(_parameters);
+        QMap<QString, QString> params(_authParameters);
         params.remove(QString("oauth_signature"));
         return Util::buildParameterString(params);
     }
@@ -253,7 +258,7 @@ namespace OAuthNS {
         if (!authHeader.isEmpty()) {
             request.setRawHeader("Authorization", authHeader);
         }
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "tex/xml");
+        request.setHeader(QNetworkRequest::ContentTypeHeader, _contentType);
 
         if (_reply != 0 && _reply->parent() == this) {
             delete _reply;
@@ -261,13 +266,21 @@ namespace OAuthNS {
         }
 
         switch (_method) {
-            case POST: _reply = getNetworkAccessManager()->post(request, _body);
-                break;
-            case PUT: _reply = getNetworkAccessManager()->put(request, _body);
-                break;
-            case DELETE: _reply = getNetworkAccessManager()->deleteResource(request);
-                break;
-            default: _reply = getNetworkAccessManager()->get(request);
+            case POST: {
+                _reply = getNetworkAccessManager()->post(request, getBody());
+            }
+            break;
+            case PUT: {
+                _reply = getNetworkAccessManager()->put(request, getBody());
+            }
+            break;
+            case DELETE: {
+                _reply = getNetworkAccessManager()->deleteResource(request);
+            }
+            break;
+            default: {
+                _reply = getNetworkAccessManager()->get(request);
+            }
         }
 
         connect(_reply, SIGNAL(finished()), this, SLOT(replyFinished()));
@@ -281,9 +294,24 @@ namespace OAuthNS {
         return &_url;
     }
 
+    QByteArray Request::getBody()
+    {
+        if (_body.isEmpty()) {
+            return Util::buildParameterString(_parameters).toAscii();
+        }
+        else {
+            return _body;
+        }
+    }
+
     void Request::setBody(QByteArray body)
     {
         _body = body;
+    }
+
+    void Request::setContentType(QString type)
+    {
+        _contentType = type;
     }
 
     void Request::replyFinished()
