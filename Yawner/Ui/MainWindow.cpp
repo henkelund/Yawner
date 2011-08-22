@@ -33,18 +33,11 @@
 #include <QDesktopServices>
 #include <QTimer>
 #include <QBoxLayout>
-#include <QPropertyAnimation>
-#include <QPixmap>
-#include <QImage>
-#include <QPoint>
-#include <QRegion>
-#include <QImageWriter>
 #include <QMessageBox>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
 #include "Yawner/Ui/MessageWidget.h"
-#include "Yawner/Ui/View/Snapshot.h"
 
 namespace YawnerNS {
     namespace UiNS {
@@ -60,7 +53,7 @@ namespace YawnerNS {
             connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
             //connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
             connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
-            showView(_ui->feedView, false);
+            _ui->bodyWidget->showView(_ui->feedView, false);
             connect(_ui->threadBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
             connect(_ui->userBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
             connect(_ui->postSubmit, SIGNAL(clicked()), this, SLOT(submitClicked()));
@@ -156,12 +149,13 @@ namespace YawnerNS {
             if (!token.isNull()) {
                 _yawner->setAccessToken(token);
                 _yawner->getYammerApi()->setAccessToken(token);
+                fetchMessages();
             }
         }
 
         void MainWindow::fetchMessages()
         {
-            statusBar()->showMessage(QString("Fetching messages.."), 3000);
+            //statusBar()->showMessage(QString("Fetching messages.."), 3000);
             _yawner->getMessageManager()->requestMessages(
                         YawnerNS::ManagerNS::MessageManager::NewerThan, _ui->feedView->getNewestId());
         }
@@ -183,14 +177,12 @@ namespace YawnerNS {
                 _threadWidgets.append(mWidget);
                 layout->addWidget(mWidget);
             }
-            showView(_ui->threadView);
-            _ui->postInput->clearFocus();
+            _ui->bodyWidget->showView(_ui->threadView);
         }
 
         void MainWindow::showUser(int userId)
         {
-            showView(_ui->userView);
-            _ui->postInput->clearFocus();
+            _ui->bodyWidget->showView(_ui->userView);
         }
 
         void MainWindow::showBrowser(QUrl url)
@@ -200,71 +192,7 @@ namespace YawnerNS {
 
         void MainWindow::showFeed()
         {
-            showView(_ui->feedView);
-        }
-
-        void MainWindow::showView(QWidget *widget, bool animate)
-        {
-            int animationSpeed = 300;
-            QEasingCurve animationCurve = QEasingCurve::InOutSine;
-
-            YawnerNS::UiNS::ViewNS::Snapshot *snapshot = 0;
-            if (animate) {
-                snapshot = new YawnerNS::UiNS::ViewNS::Snapshot(_ui->bodyWidget);
-            }
-
-            QBoxLayout *layout = static_cast<QBoxLayout*>(_ui->bodyWidget->layout());
-
-            QListIterator<YawnerNS::UiNS::ViewNS::AbstractView*> it(
-                static_cast<QList<YawnerNS::UiNS::ViewNS::AbstractView*> >(
-                    _ui->bodyWidget->findChildren<YawnerNS::UiNS::ViewNS::AbstractView*>()
-                )
-            );
-
-            int showIndex = 0;
-            int hideIndex = 0;
-
-            while (it.hasNext()) {
-                YawnerNS::UiNS::ViewNS::AbstractView *view = it.next();
-
-                if (view == widget) {
-                    showIndex = layout->indexOf(view);
-                    view->beforeShow();
-                    if (animate) {
-                        QPropertyAnimation *animation = new QPropertyAnimation(view, "maximumWidth");
-                        animation->setDuration(animationSpeed);
-                        animation->setEasingCurve(animationCurve);
-                        animation->setStartValue(view->width());
-                        animation->setEndValue(width());
-                        animation->start(QAbstractAnimation::DeleteWhenStopped);
-                        connect(animation, SIGNAL(finished()), view, SLOT(maximized()));
-                    }
-                    else {
-                        view->maximized();
-                    }
-                }
-                else if (!view->isHidden() || view->width() > 0) {
-                    hideIndex = layout->indexOf(view);
-                    view->beforeHide();
-                    view->setMaximumWidth(0);
-                    view->minimized();
-                }
-            }
-
-            if (animate) {
-                layout->insertWidget(
-                    hideIndex < showIndex ? showIndex : showIndex + 1,
-                    snapshot
-                );
-                snapshot->setVisible(true);
-                QPropertyAnimation *animation = new QPropertyAnimation(snapshot, "maximumWidth");
-                animation->setDuration(animationSpeed);
-                animation->setEasingCurve(animationCurve);
-                animation->setStartValue(width());
-                animation->setEndValue(0);
-                animation->start(QAbstractAnimation::DeleteWhenStopped);
-                connect(animation, SIGNAL(finished()), snapshot, SLOT(animationFinished()));
-            }
+            _ui->bodyWidget->showView(_ui->feedView);
         }
 
         void MainWindow::submitClicked()

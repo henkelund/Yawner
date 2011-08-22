@@ -78,6 +78,7 @@ namespace YawnerNS {
 
             void AbstractView::maximized()
             {
+                setMinimumWidth(0);
                 setMaximumWidth(0xffffff);
                 //setDisabled(false);
             }

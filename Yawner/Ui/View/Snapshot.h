@@ -41,16 +41,20 @@ namespace YawnerNS {
                 Q_OBJECT
 
             private:
-                QImage _image;
+                QWidget *_before;
+                QWidget *_after;
+                QImage  _image;
+                bool    _disposed;
 
             public:
-                explicit Snapshot(QWidget *target, QWidget *parent = 0);
+                explicit Snapshot(QWidget *before, QWidget *after, QWidget *parent = 0);
 
             signals:
+                void disposed(QWidget *after);
 
             public slots:
-                void paintEvent(QPaintEvent *event);
-                void animationFinished();
+                void paintEvent(QPaintEvent *parent);
+                void dispose();
 
             };
 

@@ -36,11 +36,11 @@ namespace YawnerNS {
     namespace UiNS {
         namespace ViewNS {
 
-            Snapshot::Snapshot(QWidget *target, QWidget *parent) :
-                QWidget(parent)
+            Snapshot::Snapshot(QWidget *before, QWidget *after, QWidget *parent) :
+                QWidget(parent), _before(before), _after(after), _disposed(false)
             {
-                QPixmap viewDump(target->size());
-                target->render(&viewDump);
+                QPixmap viewDump(_before->size());
+                _before->render(&viewDump);
                 _image = viewDump.toImage();
                 setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             }
@@ -87,10 +87,14 @@ namespace YawnerNS {
                 );
             }
 
-            void Snapshot::animationFinished()
+            void Snapshot::dispose()
             {
-                parentWidget()->layout()->removeWidget(this);
-                deleteLater();
+                if (!_disposed) {
+                    parentWidget()->layout()->removeWidget(this);
+                    emit disposed(_after);
+                    deleteLater();
+                    _disposed = true;
+                }
             }
 
         }

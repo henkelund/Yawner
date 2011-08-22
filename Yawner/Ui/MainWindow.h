@@ -30,7 +30,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QNetworkRequest>
 #include "Yawner.h"
 #include "Yammer/Api.h"
 #include "Yammer/Message.h"
@@ -51,7 +50,6 @@ namespace YawnerNS {
         public:
             explicit MainWindow(QWidget *parent = 0);
             ~MainWindow();
-            void showView(QWidget *widget, bool animate = true);
 
         private:
             Ui::MainWindow *_ui;
