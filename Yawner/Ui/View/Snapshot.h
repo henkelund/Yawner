@@ -39,20 +39,30 @@ namespace YawnerNS {
             class Snapshot : public QWidget
             {
                 Q_OBJECT
-
-            private:
-                QWidget *_before;
-                QWidget *_after;
-                QImage  _image;
-                bool    _disposed;
+                Q_PROPERTY(float progress READ getProgress WRITE setProgress)
 
             public:
-                explicit Snapshot(QWidget *before, QWidget *after, QWidget *parent = 0);
+                enum Direction {Left, Right};
+
+            private:
+                QWidget     *_target;
+                QImage      _image;
+                Direction   _direction;
+                float       _progress;
+                bool        _disposed;
+
+            public:
+                explicit Snapshot(QWidget *target, QWidget *alternative = 0, QWidget *parent = 0);
+
+                float getProgress();
+
+                void setDirection(Direction direction);
 
             signals:
-                void disposed(QWidget *after);
+                void disposed(QWidget *target);
 
             public slots:
+                void setProgress(float progress);
                 void paintEvent(QPaintEvent *parent);
                 void dispose();
 

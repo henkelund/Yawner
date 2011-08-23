@@ -221,7 +221,7 @@ namespace YawnerNS {
                 _ui->postSubmit->setToolTip(QString("Reply to %1").arg(user->getData("full_name").toString()));
             }
             else {
-                _ui->postSubmit->setIcon(QIcon(QString(":/icon.svg")));
+                _ui->postSubmit->setIcon(QIcon(QString(":/icon48.png")));
                 _ui->postSubmit->setToolTip(QString("Post to feed"));
             }
         }

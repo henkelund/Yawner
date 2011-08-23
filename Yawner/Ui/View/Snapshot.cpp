@@ -36,13 +36,21 @@ namespace YawnerNS {
     namespace UiNS {
         namespace ViewNS {
 
-            Snapshot::Snapshot(QWidget *before, QWidget *after, QWidget *parent) :
-                QWidget(parent), _before(before), _after(after), _disposed(false)
+            Snapshot::Snapshot(QWidget *target, QWidget *alternative, QWidget *parent) :
+                QWidget(parent),
+                _target(target),
+                _direction(Left),
+                _progress(0.f),
+                _disposed(false)
             {
-                QPixmap viewDump(_before->size());
-                _before->render(&viewDump);
+                if (alternative == 0) {
+                    alternative = _target;
+                }
+                QPixmap viewDump(alternative->size());
+                alternative->render(&viewDump);
                 _image = viewDump.toImage();
                 setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+                setAttribute(Qt::WA_TransparentForMouseEvents, true);
             }
 
             void Snapshot::paintEvent(QPaintEvent *event)
@@ -51,47 +59,72 @@ namespace YawnerNS {
 
                 QImage image(_image);
                 QColor c;
-                float s = ((float) width())/_image.width(); // saturation
-                int r, g, b, gr, maxX, maxY, x, y;
+                int width = this->width()*(1.f - _progress);
+
+                if (width <= 0) {
+                    return;
+                }
+
+                float s = ((float) width)/_image.width(); // grayness
+                int r, g, b, gr, maxX, maxY, x, y, xOff;
+                bool right = _direction == Right;
+                QRgb pixel;
+                xOff = right ? this->width() - width : 0;
                 maxY = image.height() < height() ? image.height() : height();
-                maxX = image.width() < width() ? image.width() : width();
+                maxX = image.width() < width ? image.width() : width;
                 for (y = 0; y < maxY; ++y) {
                     for (x = 0; x < maxX; ++x) {
-                        QRgb pixel = _image.pixel(x, y);
+                        pixel = _image.pixel(x + xOff, y);
                         b = pixel%0x000100;
                         g = ((pixel-b)%0x010000)/0x000100;
                         r = ((pixel-g-b)%0x01000000)/0x010000;
                         gr = (11*r + 16*g + 5*b)/32; // gray
                         c.setRgb(s*r + (1-s)*gr, s*g + (1-s)*gr, s*b + (1-s)*gr);
-                        image.setPixel(x, y, c.rgb());
+                        image.setPixel(x + xOff, y, c.rgb());
                     }
                 }
-                painter.drawImage(0, 0, image);
 
-                bool right = geometry().x() <= 0;
-                int shadowWidth = 24;
+                painter.drawImage(xOff, 0, image, xOff, 0, width);
+
+                int shadowWidth = width/2;
                 QLinearGradient gradient(
-                    right ? width() : 0,
+                    right ? xOff : width,
                     0,
-                    right ? width() - shadowWidth : shadowWidth,
+                    right ? xOff + shadowWidth : width - shadowWidth,
                     0
                 );
                 gradient.setColorAt(0.0, QColor(36, 36, 36, 256*(1-s)));
                 gradient.setColorAt(1.0, QColor(36, 36, 36, 0));
                 painter.fillRect(
-                    right ? width() - shadowWidth : 0,
+                    right ? xOff : width - shadowWidth,
                     0,
-                    right ? width() : shadowWidth,
+                    shadowWidth,
                     height(),
                     gradient
                 );
+            }
+
+            float Snapshot::getProgress()
+            {
+                return _progress;
+            }
+
+            void Snapshot::setProgress(float progress)
+            {
+                _progress = progress;
+                repaint();
+            }
+
+            void Snapshot::setDirection(Direction direction)
+            {
+                _direction = direction;
             }
 
             void Snapshot::dispose()
             {
                 if (!_disposed) {
                     parentWidget()->layout()->removeWidget(this);
-                    emit disposed(_after);
+                    emit disposed(_target);
                     deleteLater();
                     _disposed = true;
                 }

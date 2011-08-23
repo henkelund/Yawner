@@ -75,7 +75,7 @@
          </property>
          <property name="icon">
           <iconset resource="../../assets/yawner.qrc">
-           <normaloff>:/icon.svg</normaloff>:/icon.svg</iconset>
+           <normaloff>:/icon48.png</normaloff>:/icon48.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -183,8 +183,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>297</width>
-          <height>436</height>
+          <width>120</width>
+          <height>45</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -222,8 +222,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>297</width>
-          <height>436</height>
+          <width>219</width>
+          <height>45</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">

@@ -2,7 +2,6 @@
 #define BODYWIDGET_H
 
 #include <QStackedWidget>
-#include "Yawner/Ui/View/AbstractView.h"
 #include "Yawner/Ui/View/Snapshot.h"
 
 namespace YawnerNS {
@@ -11,15 +10,18 @@ namespace YawnerNS {
         class BodyWidget : public QStackedWidget
         {
             Q_OBJECT
+        private:
+            YawnerNS::UiNS::ViewNS::Snapshot *_currentSnapshot;
+
         public:
             explicit BodyWidget(QWidget *parent = 0);
 
-            void showView(YawnerNS::UiNS::ViewNS::AbstractView *widget, bool animate = true);
+            void showView(QWidget *widget, bool animate = true);
 
         signals:
 
         public slots:
-            void snapshotRemoved(QWidget *after);
+            void snapshotRemoved(QWidget *target);
 
         };
 
