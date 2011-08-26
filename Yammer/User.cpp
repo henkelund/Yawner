@@ -61,6 +61,16 @@ namespace YammerNS {
         return _data.value(QString("id"), QVariant(0)).toInt();
     }
 
+    QString User::getName()
+    {
+        return _data.value(QString("full_name"), QString("")).toString();
+    }
+
+    QString User::getUserName()
+    {
+        return _data.value(QString("name"), QString("")).toString();
+    }
+
     QPixmap User::getSmallImage()
     {
         if (_smallImage == 0) {

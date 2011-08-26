@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>297</width>
-    <height>526</height>
+    <width>290</width>
+    <height>512</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>512</width>
+    <height>16777215</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Yawner - Yammer Desktop Client</string>
@@ -35,7 +41,13 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QWidget" name="postWrapper" native="true">
+     <widget class="YawnerNS::UiNS::HeadWidget" name="headWidget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <property name="spacing">
         <number>0</number>
@@ -53,12 +65,48 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLineEdit" name="postInput">
-         <property name="text">
-          <string/>
+        <widget class="YawnerNS::UiNS::HeadWidgetNS::PostTextEdit" name="postMulti">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="placeholderText">
-          <string>What are you &quot;working&quot; on?</string>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="lineWrapMode">
+          <enum>QTextEdit::WidgetWidth</enum>
          </property>
         </widget>
        </item>
@@ -111,8 +159,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>297</width>
-          <height>445</height>
+          <width>290</width>
+          <height>431</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -139,6 +187,9 @@
             </property>
             <item>
              <widget class="QPushButton" name="showOlderButton">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="text">
                <string>Show older</string>
               </property>
@@ -246,7 +297,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>297</width>
+     <width>290</width>
      <height>25</height>
     </rect>
    </property>
@@ -276,6 +327,17 @@
    <extends>QStackedWidget</extends>
    <header>../Yawner/Yawner/Ui/BodyWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>YawnerNS::UiNS::HeadWidget</class>
+   <extends>QWidget</extends>
+   <header>../Yawner/Yawner/Ui/HeadWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>YawnerNS::UiNS::HeadWidgetNS::PostTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>../Yawner/Yawner/Ui/HeadWidget/PostTextEdit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

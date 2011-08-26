@@ -54,6 +54,7 @@ namespace YawnerNS {
 
             void AbstractView::paintEvent(QPaintEvent *event)
             {
+                Q_UNUSED(event);
                 // This looks nice except for the scrollbar margin
                 // Bail out for now
                 return;

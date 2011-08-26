@@ -55,6 +55,11 @@ namespace YawnerNS {
                 );
         }
 
+        QMap<int, YammerNS::User*> UserManager::getUserIndex()
+        {
+            return _userIndex;
+        }
+
         YammerNS::User* UserManager::getUserById(int id, bool *created)
         {
             if (!_userIndex.contains(id)) {
@@ -67,6 +72,19 @@ namespace YawnerNS {
                 (*created) = false;
             }
             return _userIndex.value(id);
+        }
+
+        QList<YammerNS::User*> UserManager::getUsersByUserName(QRegExp pattern)
+        {
+            QList<YammerNS::User*> matches;
+            QMapIterator<int, YammerNS::User*> it(_userIndex);
+            while (it.hasNext()) {
+                YammerNS::User* user = it.next().value();
+                if (pattern.indexIn(user->getData("name").toString()) >= 0) {
+                    matches.append(user);
+                }
+            }
+            return matches;
         }
 
         void UserManager::usersRecieved(OAuthNS::Response* response)

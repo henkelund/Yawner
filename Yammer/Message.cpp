@@ -40,7 +40,6 @@ namespace YammerNS {
     bool Message::_beforeLoad(QVariantMap *data)
     {
         if (data->value(QString("id")).toInt() <= 0) {
-            qDebug(QString("No message ID").toStdString().c_str());
             return false;
         }
         return true;
@@ -59,6 +58,16 @@ namespace YammerNS {
     QString Message::getText()
     {
         return getData(QString("body")).toMap().value(QString("parsed")).toString();
+    }
+
+    QString Message::getExcerpt()
+    {
+        QString text = getData(QString("body")).toMap().value(QString("plain")).toString();
+        if (text.length() > 200) {
+            text.chop(198);
+            text = text.trimmed().append("..");
+        }
+        return text;
     }
 
     User* Message::getUser()

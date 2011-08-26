@@ -50,7 +50,11 @@ namespace YawnerNS {
 
             void init();
 
+            QMap<int, YammerNS::User*> getUserIndex();
+
             YammerNS::User* getUserById(int id, bool *created = 0);
+
+            QList<YammerNS::User*> getUsersByUserName(QRegExp pattern);
 
         signals:
             void newUsersLoaded(QList<int> newUserIds);

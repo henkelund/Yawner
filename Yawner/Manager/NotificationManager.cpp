@@ -62,5 +62,13 @@ namespace YawnerNS {
             _icon->showMessage(title, message, QSystemTrayIcon::Information, 3000);
 #endif
         }
+
+        void NotificationManager::show(YammerNS::Message *message)
+        {
+            show(
+                message->getUser()->isLoaded() ? message->getUser()->getName() : QString("Yawner"),
+                message->getExcerpt()
+            );
+        }
     }
 }

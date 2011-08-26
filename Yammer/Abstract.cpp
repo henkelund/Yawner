@@ -38,12 +38,14 @@ namespace YammerNS {
 
     bool Abstract::_beforeLoad(QVariantMap *data)
     {
+        Q_UNUSED(data);
         // do nothing but give subclasses a chance to do something
         return true;
     }
 
     bool Abstract::_afterLoad(QVariantMap *data)
     {
+        Q_UNUSED(data);
         // do nothing but give subclasses a chance to do something
         return true;
     }

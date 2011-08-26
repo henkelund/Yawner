@@ -31,6 +31,7 @@
 
 #include "../Manager.h"
 #include <QSystemTrayIcon>
+#include "Yammer/Message.h"
 
 namespace YawnerNS {
     namespace ManagerNS {
@@ -48,6 +49,8 @@ namespace YawnerNS {
             explicit NotificationManager(QObject *parent = 0);
 
             void show(QString title, QString message);
+
+            void show(YammerNS::Message *message);
 
         signals:
 

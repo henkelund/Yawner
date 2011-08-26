@@ -36,7 +36,9 @@ SOURCES += main.cpp\
     Yawner/Ui/View/AbstractView.cpp \
     Yawner/Ui/View/FeedView.cpp \
     Yawner/Ui/View/Snapshot.cpp \
-    Yawner/Ui/BodyWidget.cpp
+    Yawner/Ui/BodyWidget.cpp \
+    Yawner/Ui/HeadWidget.cpp \
+    Yawner/Ui/HeadWidget/PostTextEdit.cpp
 
 HEADERS  += Yawner/Ui/MainWindow.h \
     OAuth/Consumer.h \
@@ -61,7 +63,9 @@ HEADERS  += Yawner/Ui/MainWindow.h \
     Yawner/Ui/View/AbstractView.h \
     Yawner/Ui/View/FeedView.h \
     Yawner/Ui/View/Snapshot.h \
-    Yawner/Ui/BodyWidget.h
+    Yawner/Ui/BodyWidget.h \
+    Yawner/Ui/HeadWidget.h \
+    Yawner/Ui/HeadWidget/PostTextEdit.h
 
 FORMS    += Yawner/Ui/mainwindow.ui \
     Yawner/Ui/messagewidget.ui

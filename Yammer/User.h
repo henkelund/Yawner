@@ -56,6 +56,10 @@ namespace YammerNS {
 
         int getId();
 
+        QString getName();
+
+        QString getUserName();
+
         QPixmap getSmallImage();
 
     signals:

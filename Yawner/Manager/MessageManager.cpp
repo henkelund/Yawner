@@ -65,9 +65,10 @@ namespace YawnerNS {
                     }
                 }
                 break;
+                default: {}
             }
 
-            OAuthNS::Request *request = _yawner()
+            _yawner()
                 ->getYammerApi()
                 ->get(
                     "messages",
@@ -78,7 +79,7 @@ namespace YawnerNS {
 
         void MessageManager::requestThreadMessages(int threadId)
         {
-            OAuthNS::Request *request = _yawner()
+            _yawner()
                 ->getYammerApi()
                 ->get(
                     QString("messages/in_thread/%1").arg(QString::number(threadId)),
@@ -144,7 +145,7 @@ namespace YawnerNS {
                 setReplyToMessage(0);
             }
 
-            OAuthNS::Request *request = _yawner()
+            _yawner()
                 ->getYammerApi()
                 ->post(
                     "messages",

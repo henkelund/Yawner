@@ -103,7 +103,7 @@ namespace YawnerNS {
 
         void MessageWidget::processMessageData()
         {
-            _ui->name->setText(_message->getUser()->getData("full_name").toString().replace(QString(" "), QString("\n")));
+            _ui->name->setText(_message->getUser()->getName().replace(QString(" "), QString("\n")));
 
             QPixmap avatar = _message->getUser()->getSmallImage();
             _ui->avatarButton->setIcon(QIcon(_decorateAvatar(&avatar)));
@@ -114,17 +114,21 @@ namespace YawnerNS {
 
         void MessageWidget::messageDataLoaded(YammerNS::Abstract *message)
         {
+            Q_UNUSED(message);
             QTimer::singleShot(100, this, SLOT(processMessageData()));
         }
 
         void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
         {
-            _ui->avatarButton->setToolTip(QString("Reply to %1").arg(user->getData("full_name").toString()));
+            _ui->avatarButton->setToolTip(
+                QString("Reply to %1").arg(((YammerNS::User*)user)->getName())
+            );
             QTimer::singleShot(100, this, SLOT(processMessageData()));
         }
 
         void MessageWidget::paintEvent(QPaintEvent *e)
         {
+            Q_UNUSED(e);
             QPainter painter(this);
 
             QLinearGradient gradient(0, 0, 0, height());
@@ -226,7 +230,7 @@ namespace YawnerNS {
                     rawText = rawText.replace(
                         QString("[[user:%1]]").arg(uid),
                         QString("<a style=\"color: #008b9e; font: 700 10px; text-decoration: none;\" href=\"user:%1\">%2</a>")
-                                .arg(QString::number(uid), user->getData("full_name").toString())
+                                .arg(QString::number(uid), user->getName())
                      );
                 }
             }
@@ -242,7 +246,7 @@ namespace YawnerNS {
                     Yawner::getInstance()->getMessageManager()->requestThreadMessages(threadId);
                 }
                 else {
-                    repliedToName = repliedToMessage->getUser()->getData("full_name").toString();
+                    repliedToName = repliedToMessage->getUser()->getName();
                 }
             }
 

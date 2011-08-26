@@ -33,7 +33,6 @@
 #include <QDesktopServices>
 #include <QTimer>
 #include <QBoxLayout>
-#include <QMessageBox>
 #include "Yawner.h"
 #include "OAuth/Token.h"
 #include "Yammer/Api.h"
@@ -50,13 +49,13 @@ namespace YawnerNS {
         {
             _ui->setupUi(this);
             _ui->feedView->init();
+            _ui->headWidget->init();
             connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
             //connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
             connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
             _ui->bodyWidget->showView(_ui->feedView, false);
             connect(_ui->threadBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
             connect(_ui->userBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
-            connect(_ui->postSubmit, SIGNAL(clicked()), this, SLOT(submitClicked()));
 
             QFile styleSheet(QString(":/yawner.css"));
             QString css;
@@ -112,6 +111,13 @@ namespace YawnerNS {
                     this,
                     SLOT(replyToMessageChanged(int))
                 );
+                connect(
+                    _yawner->getUserManager(),
+                    SIGNAL(newUsersLoaded(QList<int>)),
+                    _ui->postMulti,
+                    SLOT(newUsersLoaded(QList<int>))
+                );
+
                 // we're using long-polling instead.
                 // maybe this should be kept as an alternative?
                 /*QTimer *timer = new QTimer(this);
@@ -182,6 +188,7 @@ namespace YawnerNS {
 
         void MainWindow::showUser(int userId)
         {
+            Q_UNUSED(userId);
             _ui->bodyWidget->showView(_ui->userView);
         }
 
@@ -195,22 +202,6 @@ namespace YawnerNS {
             _ui->bodyWidget->showView(_ui->feedView);
         }
 
-        void MainWindow::submitClicked()
-        {
-            QString text = _ui->postInput->text();
-            if (text.trimmed().length() > 0) {
-                _ui->postInput->setText("");
-                _yawner->getMessageManager()->postMessage(text);
-            }
-            else {
-                QMessageBox dialog(this);
-                dialog.setWindowTitle("Error sending message");
-                dialog.setIconPixmap(QPixmap(QString(":/icon48.png")));
-                dialog.setText("Cannot post empty message.");
-                dialog.exec();
-            }
-        }
-
         void MainWindow::replyToMessageChanged(int id)
         {
             if (id > 0) {
@@ -218,7 +209,7 @@ namespace YawnerNS {
                         _yawner->getMessageManager()->getMessageById(id)->getUser();
 
                 _ui->postSubmit->setIcon(QIcon(user->getSmallImage()));
-                _ui->postSubmit->setToolTip(QString("Reply to %1").arg(user->getData("full_name").toString()));
+                _ui->postSubmit->setToolTip(QString("Reply to %1").arg(user->getName()));
             }
             else {
                 _ui->postSubmit->setIcon(QIcon(QString(":/icon48.png")));

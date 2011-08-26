@@ -62,39 +62,25 @@ namespace YawnerNS {
                 if (!_hasChanges) {
                     return;
                 }
-                QListIterator<YawnerNS::UiNS::MessageWidget*> it(_messagesWidgets);
+                QListIterator<YawnerNS::UiNS::MessageWidget*> all(_messagesWidgets);
                 QBoxLayout *layout = _getMessageLayout();
-                YawnerNS::UiNS::MessageWidget *first = 0;
-                while (it.hasNext()) {
-                    YawnerNS::UiNS::MessageWidget *widget = it.next();
-                    if (layout->indexOf(widget) < 0) {
-                        if (layout->count() == 0) {
-                            layout->addWidget(widget);
-                            first = widget;
+                QListIterator<YawnerNS::UiNS::MessageWidget*> old(layout->findChildren<YawnerNS::UiNS::MessageWidget*>());
+
+                //YawnerNS::UiNS::MessageWidget *first = 0;
+                while (all.hasNext()) {
+                    YawnerNS::UiNS::MessageWidget *widget = all.next();
+                    bool inserted = false;
+                    old.toFront();
+                    while (old.hasNext()) {
+                        YawnerNS::UiNS::MessageWidget *oldWidget = old.next();
+                        if (widget->isTimestampGreaterThan(oldWidget)) {
+                            layout->insertWidget(layout->indexOf(oldWidget), widget);
+                            inserted = true;
+                            break;
                         }
-                        else {
-                            if (!first) {
-                                // it would be better to find the first child of the layout
-                                // instead of _messagesWidgets but this will do for now
-                                if (layout->indexOf(_messagesWidgets.first()) >= 0) {
-                                    first = _messagesWidgets.first();
-                                }
-                                else {
-                                    first = widget;
-                                }
-                            }
-                            // if widget to add is newer than top widget, prepend it
-                            if (!widget->isTimestampLessThan(first)) {
-                                layout->insertWidget(0, widget);
-                                first = widget;
-                            }
-                            // else append it
-                            // (doesn't cover case where age of message is in between the
-                            //  ones currently displayed but that shouldn't happen)
-                            else {
-                                layout->addWidget(widget);
-                            }
-                        }
+                    }
+                    if (!inserted) {
+                        layout->addWidget(widget);
                     }
                 }
                 _hasChanges = false;
@@ -117,10 +103,7 @@ namespace YawnerNS {
                     connect(widget, SIGNAL(userLinkClicked(int)), this, SLOT(messageUserLinkClicked(int)));
                     connect(widget, SIGNAL(webLinkClicked(QUrl)), this, SLOT(messageWebLinkClicked(QUrl)));
                     if (0 == i++ && message->getId() > getNewestId()) {
-                        Yawner::getInstance()->getNotificationManager()->show(
-                            QString("Yawner"), //message->getUser()->getData("full_name").toString(),
-                            message->getData("body").toMap().value("plain").toString()
-                        );
+                        Yawner::getInstance()->getNotificationManager()->show(message);
                     }
                     _messagesWidgets.append(widget);
                 }

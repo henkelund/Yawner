@@ -55,6 +55,8 @@ namespace YawnerNS {
 
             void Snapshot::paintEvent(QPaintEvent *event)
             {
+                Q_UNUSED(event);
+
                 QPainter painter(this);
 
                 QImage image(_image);

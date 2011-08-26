@@ -18,54 +18,46 @@
 * You should have received a copy of the GNU General Public License
 * along with Yawner. If not, see <http://www.gnu.org/licenses/>.
 *
-* @category Yammer
-* @package Yammer
+* @category Yawner/Ui
+* @package Yawner/Ui
 * @author Henrik Hedelund <henke.hedelund@gmail.com>
 * @copyright 2011 Henrik Hedelund (henke.hedelund@gmail.com)
 * @license http://www.gnu.org/licenses/gpl.html GNU GPL
 * @link http://yawner.henkehedelund.se/
 */
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef HEADWIDGET_H
+#define HEADWIDGET_H
 
-#include <QObject>
-#include <QScriptValue>
-#include "Abstract.h"
-#include "User.h"
+#include <QWidget>
+#include <QPushButton>
+#include "Yawner/Ui/HeadWidget/PostTextEdit.h"
 
-namespace YammerNS {
+namespace YawnerNS {
+    namespace UiNS {
 
-    class Message : public Abstract
-    {
-        Q_OBJECT
-    private:
-        long _timestamp;
+        class HeadWidget : public QWidget
+        {
+            Q_OBJECT
+        private:
+            YawnerNS::UiNS::HeadWidgetNS::PostTextEdit  *_textEdit;
+            QPushButton                                 *_submitButton;
 
-    protected:
-        virtual bool _beforeLoad(QVariantMap *data);
+        public:
+            explicit HeadWidget(QWidget *parent = 0);
 
-    public:
-        explicit Message(QObject *parent = 0);
+            void init();
 
-        int getId();
+        signals:
 
-        int getParentId();
+        public slots:
+            void submitClicked();
 
-        QString getText();
+        protected slots:
+            void paintEvent(QPaintEvent *event);
+        };
 
-        QString getExcerpt();
-
-        User* getUser();
-
-        long getTimestamp();
-
-    signals:
-
-    public slots:
-
-    };
-
+    }
 }
 
-#endif // MESSAGE_H
+#endif // HEADWIDGET_H

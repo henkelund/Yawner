@@ -64,7 +64,6 @@ namespace YawnerNS {
             void fetchMessages();
             void requestTokenRecieved(OAuthNS::Token token);
             void accessTokenRecieved(OAuthNS::Token token);
-            void submitClicked();
             void replyToMessageChanged(int id);
         };
 
