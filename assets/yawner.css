@@ -61,7 +61,8 @@ QScrollBar::sub-page {
     background: transparent;
 }
 
-QScrollBar::handle { 
+QScrollBar::handle {
+    min-height: 10px;
     border-radius: 2px; 
     border: 0; 
     background: #FF5800;

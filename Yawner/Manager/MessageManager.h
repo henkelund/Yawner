@@ -47,9 +47,15 @@ namespace YawnerNS {
              *
              * @var QMap<int, Message*>
              */
-            QMap<int, YammerNS::Message*> _messageIndex;
+            QMap<int, YammerNS::Message*>   _messageIndex;
 
-            int _replyToMessageId;
+            QList<YammerNS::Message*>       _cronoIndex;
+
+            QList<int>                      _lastLoadIds;
+
+            int                             _replyToMessageId;
+
+            void _buildCronoIndex();
 
         public:
 
@@ -57,7 +63,21 @@ namespace YawnerNS {
 
             explicit MessageManager(QObject *parent = 0);
 
+            virtual ~MessageManager();
+
             void init();
+
+            QMap<int, YammerNS::Message*> getMessageIndex();
+
+            QList<int> getLastLoadIds();
+
+            YammerNS::Message* getNewestMessage();
+
+            YammerNS::Message* getOldestMessage();
+
+            YammerNS::Message* getRepliedToMessage(YammerNS::Message *reply);
+
+            YammerNS::Message* getThreadStarterMessage(YammerNS::Message *reply);
 
             YammerNS::Message* getMessageById(int id, bool *created = 0);
 

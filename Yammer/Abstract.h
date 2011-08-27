@@ -38,8 +38,10 @@ namespace YammerNS {
     {
         Q_OBJECT
     protected:
+        int         _id;
+        QString     _idKey;
         QVariantMap _data;
-        bool _isLoaded;
+        bool        _isLoaded;
 
         virtual bool _beforeLoad(QVariantMap *data);
         virtual bool _afterLoad(QVariantMap *data);
@@ -47,11 +49,15 @@ namespace YammerNS {
     public:
         explicit Abstract(QObject *parent = 0);
 
+        explicit Abstract(int id, QObject *parent = 0);
+
+        virtual int getId();
+
         bool load(QVariantMap data, bool *isFirstLoad = 0);
 
         bool isLoaded();
 
-        QVariant getData(QString key);
+        QVariant getData(QString key = QString());
 
     signals:
         void dataLoaded(YammerNS::Abstract *obj);

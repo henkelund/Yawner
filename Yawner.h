@@ -60,8 +60,6 @@ private:
 
 public:
 
-    ~Yawner();
-
     static Yawner* getInstance();
 
     YammerNS::Api* getYammerApi();
@@ -86,6 +84,7 @@ public:
 
     QString getFileContents(QString filename);
 
+    void putFileContents(QString filename, QString content);
 };
 
 #endif // YAWNER_H

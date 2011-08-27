@@ -77,6 +77,16 @@ namespace YawnerNS {
                 this,
                 SLOT(messageDataLoaded(YammerNS::Abstract*))
             );
+            YammerNS::Message *repliedTo =
+                    Yawner::getInstance()->getMessageManager()->getRepliedToMessage(_message);
+            if (repliedTo != 0) {
+                connect(
+                    repliedTo,
+                    SIGNAL(dataLoaded(YammerNS::Abstract*)),
+                    this,
+                    SLOT(messageDataLoaded(YammerNS::Abstract*))
+                );
+            }
             connect(
                 _message->getUser(),
                 SIGNAL(dataLoaded(YammerNS::Abstract*)),
@@ -115,7 +125,7 @@ namespace YawnerNS {
         void MessageWidget::messageDataLoaded(YammerNS::Abstract *message)
         {
             Q_UNUSED(message);
-            QTimer::singleShot(100, this, SLOT(processMessageData()));
+            processMessageData();
         }
 
         void MessageWidget::userDataLoaded(YammerNS::Abstract *user)
@@ -123,7 +133,7 @@ namespace YawnerNS {
             _ui->avatarButton->setToolTip(
                 QString("Reply to %1").arg(((YammerNS::User*)user)->getName())
             );
-            QTimer::singleShot(100, this, SLOT(processMessageData()));
+            processMessageData();
         }
 
         void MessageWidget::paintEvent(QPaintEvent *e)
@@ -236,22 +246,14 @@ namespace YawnerNS {
             }
 
             QString repliedToName;
-            YammerNS::Message *repliedToMessage = 0;
-            int repliedToId = _message->getData("replied_to_id").toInt();
-            if (repliedToId > 0) {
-                bool created = false;
-                repliedToMessage = Yawner::getInstance()->getMessageManager()->getMessageById(repliedToId, &created);
-                if (created) {
-                    int threadId = _message->getData("thread_id").toInt();
-                    Yawner::getInstance()->getMessageManager()->requestThreadMessages(threadId);
-                }
-                else {
-                    repliedToName = repliedToMessage->getUser()->getName();
-                }
+            YammerNS::Message *repliedToMessage =
+                    Yawner::getInstance()->getMessageManager()->getRepliedToMessage(_message);
+            if (repliedToMessage != 0) {
+                repliedToName = repliedToMessage->getUser()->getName();
             }
 
             if (!repliedToName.isEmpty()) {
-                int threadId = _message->getData("thread_id").toInt();
+                int threadId = _message->getThreadStarterId();
                 rawText.prepend(QString("@<a style=\"color: #FF5800; font: 700 10px; text-decoration: none;\" href=\"thread:%1\">%2</a>: ")
                                 .arg(QString::number(threadId), repliedToName));
             }

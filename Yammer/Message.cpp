@@ -32,8 +32,23 @@
 
 namespace YammerNS {
 
+    bool message_is_newer_than(YammerNS::Message *left, YammerNS::Message *right)
+    {
+        return left->isNewerThan(right);
+    }
+
+    bool message_is_older_than(YammerNS::Message *left, YammerNS::Message *right)
+    {
+        return left->isOlderThan(right);
+    }
+
     Message::Message(QObject *parent) :
         Abstract(parent), _timestamp(0)
+    {
+    }
+
+    Message::Message(int id, QObject *parent) :
+        Abstract(id, parent), _timestamp(0)
     {
     }
 
@@ -45,14 +60,14 @@ namespace YammerNS {
         return true;
     }
 
-    int Message::getId()
-    {
-        return getData(QString("id")).toInt();
-    }
-
-    int Message::getParentId()
+    int Message::getRepliedToId()
     {
         return getData(QString("replied_to_id")).toInt();
+    }
+
+    int Message::getThreadStarterId()
+    {
+        return getData(QString("thread_id")).toInt();
     }
 
     QString Message::getText()
@@ -94,4 +109,13 @@ namespace YammerNS {
         return _timestamp;
     }
 
+    bool Message::isNewerThan(YammerNS::Message *other)
+    {
+        return this->getId() > other->getId();
+    }
+
+    bool Message::isOlderThan(YammerNS::Message *other)
+    {
+        return this->getId() < other->getId();
+    }
 }

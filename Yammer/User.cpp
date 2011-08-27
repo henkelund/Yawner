@@ -44,6 +44,12 @@ namespace YammerNS {
         ++_instanceCount;
     }
 
+    User::User(int id, QObject *parent) :
+        Abstract(id, parent), _smallImage(0), _hasPendingSmallImageRequest(false)
+    {
+        ++_instanceCount;
+    }
+
     User::~User()
     {
         if (_smallImage != 0) {
@@ -54,11 +60,6 @@ namespace YammerNS {
             delete _defaultSmallImage;
             _defaultSmallImage = 0;
         }
-    }
-
-    int User::getId()
-    {
-        return _data.value(QString("id"), QVariant(0)).toInt();
     }
 
     QString User::getName()

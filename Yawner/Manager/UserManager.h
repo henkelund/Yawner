@@ -48,6 +48,8 @@ namespace YawnerNS {
 
             explicit UserManager(QObject *parent);
 
+            virtual ~UserManager();
+
             void init();
 
             QMap<int, YammerNS::User*> getUserIndex();
@@ -61,6 +63,7 @@ namespace YawnerNS {
 
         public slots:
             void fetchUsers();
+            void updateUsersData(QList<QVariant> userList);
             void usersRecieved(OAuthNS::Response* response);
 
         };

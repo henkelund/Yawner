@@ -48,9 +48,11 @@ namespace YammerNS {
     public:
         explicit Message(QObject *parent = 0);
 
-        int getId();
+        explicit Message(int id, QObject *parent = 0);
 
-        int getParentId();
+        int getRepliedToId();
+
+        int getThreadStarterId();
 
         QString getText();
 
@@ -60,11 +62,18 @@ namespace YammerNS {
 
         long getTimestamp();
 
+        bool isNewerThan(YammerNS::Message *other);
+
+        bool isOlderThan(YammerNS::Message *other);
+
     signals:
 
     public slots:
 
     };
+
+    bool message_is_newer_than(YammerNS::Message *left, YammerNS::Message *right);
+    bool message_is_older_than(YammerNS::Message *left, YammerNS::Message *right);
 
 }
 

@@ -49,6 +49,10 @@ namespace YawnerNS {
 
         Yawner* _yawner();
 
+        void _storeObjectList(QString name, QList<YammerNS::Abstract*> list);
+
+        QVariantList _loadStoredObjectList(QString name);
+
     public:
         explicit Manager(QObject *parent = 0);
 

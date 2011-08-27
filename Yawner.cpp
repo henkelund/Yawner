@@ -40,10 +40,6 @@ Yawner::Yawner() :
     _yammerApi = new YammerNS::Api(getConsumer(), this);
 }
 
-Yawner::~Yawner()
-{
-}
-
 Yawner* Yawner::getInstance()
 {
     if (_instance == 0) {
@@ -136,9 +132,18 @@ QString Yawner::getFileContents(QString filename)
 {
     QFile file(getYawnerDir().absoluteFilePath(filename));
     if (file.exists() && file.open(QFile::ReadOnly)) {
-        QString contents(file.readAll());
+        QString contents = QString::fromLocal8Bit(file.readAll());
         file.close();
         return contents;
     }
     return QString(); // return null string
+}
+
+void Yawner::putFileContents(QString filename, QString content)
+{
+    QFile file(getYawnerDir().absoluteFilePath(filename));
+    if (file.open(QFile::WriteOnly)) {
+        file.write(content.toLocal8Bit());
+        file.close();
+    }
 }

@@ -27,6 +27,8 @@
 */
 
 #include "MessageManager.h"
+#include <QScriptEngine>
+#include <QScriptValue>
 #include "Yawner.h"
 #include "../../OAuth/Request.h"
 
@@ -34,19 +36,47 @@ namespace YawnerNS {
     namespace ManagerNS {
 
         MessageManager::MessageManager(QObject *parent) :
-            YawnerNS::Manager(parent), _messageIndex(), _replyToMessageId(-1)
+            YawnerNS::Manager(parent),
+            _messageIndex(),
+            _cronoIndex(),
+            _lastLoadIds(),
+            _replyToMessageId(-1)
         {
+        }
+
+        MessageManager::~MessageManager()
+        {
+            QList<YammerNS::Abstract*> messagesToSave;
+            int maxNumToStore = 100; // hard coded for now
+            for (int i = 0; i < maxNumToStore && i < _cronoIndex.length(); ++i) {
+                messagesToSave.append((YammerNS::Abstract*) _cronoIndex.at(i));
+            }
+            _storeObjectList("messages", messagesToSave);
         }
 
         void MessageManager::init()
         {
-            requestMessages();
             connect(
                 _yawner()->getYammerApi(),
                 SIGNAL(realtimeMessageList(QList<QVariant>)),
                 this,
                 SLOT(updateMessagesData(QList<QVariant>))
             );
+
+            QVariantList messages = _loadStoredObjectList("messages");
+
+            if (!messages.isEmpty()) {
+                updateMessagesData(messages);
+                if (_messageIndex.count() > 0) {
+                    requestMessages(NewerThan, getNewestMessage()->getId());
+                }
+                else {
+                    requestMessages();
+                }
+            }
+            else {
+                requestMessages();
+            }
         }
 
         void MessageManager::requestMessages(Filter filter, QVariant value)
@@ -87,10 +117,69 @@ namespace YawnerNS {
                 );
         }
 
+        QMap<int, YammerNS::Message*> MessageManager::getMessageIndex()
+        {
+            return _messageIndex;
+        }
+
+        void MessageManager::_buildCronoIndex()
+        {
+            QList<YammerNS::Message*> newIndex = _messageIndex.values();
+            qSort(newIndex.begin(), newIndex.end(), YammerNS::message_is_newer_than);
+            _cronoIndex = newIndex;
+        }
+
+        QList<int> MessageManager::getLastLoadIds()
+        {
+            return _lastLoadIds;
+        }
+
+        YammerNS::Message* MessageManager::getNewestMessage()
+        {
+            if (_cronoIndex.length() > 0) {
+                return _cronoIndex.first();
+            }
+            return 0;
+        }
+
+        YammerNS::Message* MessageManager::getOldestMessage()
+        {
+            if (_cronoIndex.length() > 0) {
+                return _cronoIndex.last();
+            }
+            return 0;
+        }
+
+        YammerNS::Message* MessageManager::getRepliedToMessage(YammerNS::Message *reply)
+        {
+            if (reply != 0 && reply->getRepliedToId() > 0) {
+                bool created = false;
+                YammerNS::Message *message = getMessageById(reply->getRepliedToId(), &created);
+                if (created == true) {
+                    requestThreadMessages(reply->getThreadStarterId());
+                }
+                return message;
+            }
+            return 0;
+        }
+
+        YammerNS::Message* MessageManager::getThreadStarterMessage(YammerNS::Message *reply)
+        {
+            if (reply != 0 && reply->getThreadStarterId() > 0) {
+                bool created = false;
+                YammerNS::Message *message = getMessageById(reply->getThreadStarterId(), &created);
+                if (created == true) {
+                    requestThreadMessages(reply->getThreadStarterId());
+                }
+                return message;
+            }
+            return 0;
+        }
+
         YammerNS::Message* MessageManager::getMessageById(int id, bool *created)
         {
             if (!_messageIndex.contains(id)) {
-                _messageIndex.insert(id, new YammerNS::Message(this));
+                _messageIndex.insert(id, new YammerNS::Message(id, this));
                 if(created != 0) {
                     (*created) = true;
                 }
@@ -180,7 +269,10 @@ namespace YawnerNS {
                 }
             }
 
+            _buildCronoIndex();
+
             if (newMessageIds.count() > 0) {
+                _lastLoadIds = newMessageIds;
                 emit newMessagesLoaded(newMessageIds);
             }
         }

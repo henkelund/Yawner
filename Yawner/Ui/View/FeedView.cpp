@@ -46,6 +46,11 @@ namespace YawnerNS {
             {
                 _showOlderButton = findChild<QPushButton*>("showOlderButton");
                 connect(_showOlderButton, SIGNAL(clicked()), this, SLOT(showOlder()));
+
+                QList<int> messageIds = Yawner::getInstance()->getMessageManager()->getLastLoadIds();
+                if (messageIds.count() > 0) {
+                    newMessagesLoaded(messageIds);
+                }
             }
 
             QBoxLayout* FeedView::_getMessageLayout()
@@ -66,7 +71,6 @@ namespace YawnerNS {
                 QBoxLayout *layout = _getMessageLayout();
                 QListIterator<YawnerNS::UiNS::MessageWidget*> old(layout->findChildren<YawnerNS::UiNS::MessageWidget*>());
 
-                //YawnerNS::UiNS::MessageWidget *first = 0;
                 while (all.hasNext()) {
                     YawnerNS::UiNS::MessageWidget *widget = all.next();
                     bool inserted = false;

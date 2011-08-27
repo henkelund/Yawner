@@ -52,9 +52,9 @@ namespace YammerNS {
     public:
         explicit User(QObject *parent = 0);
 
-        virtual ~User();
+        explicit User(int id, QObject *parent = 0);
 
-        int getId();
+        virtual ~User();
 
         QString getName();
 

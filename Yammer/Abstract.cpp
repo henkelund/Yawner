@@ -32,8 +32,25 @@
 namespace YammerNS {
 
     Abstract::Abstract(QObject *parent) :
-        QObject(parent), _isLoaded(false)
+        QObject(parent), _id(0), _idKey("id"), _isLoaded(false)
     {
+    }
+
+    Abstract::Abstract(int id, QObject *parent) :
+        QObject(parent), _id(id), _idKey("id"), _isLoaded(false)
+    {
+    }
+
+    int Abstract::getId()
+    {
+        if (_id == 0) {
+            bool ok = false;
+            _id = getData(_idKey).toInt(&ok);
+            if (!ok) {
+                _id = 0;
+            }
+        }
+        return _id;
     }
 
     bool Abstract::_beforeLoad(QVariantMap *data)
@@ -73,6 +90,9 @@ namespace YammerNS {
 
     QVariant Abstract::getData(QString key)
     {
+        if (key.isNull()) {
+            return _data;
+        }
         return _data.value(key);
     }
 }

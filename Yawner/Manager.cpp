@@ -27,6 +27,8 @@
 */
 
 #include "Manager.h"
+#include <QScriptEngine>
+#include <QScriptValue>
 #include "../Yawner.h"
 
 namespace YawnerNS {
@@ -59,4 +61,32 @@ namespace YawnerNS {
         return _yawner()->getYammerApi();
     }
 
+    void Manager::_storeObjectList(QString name, QList<YammerNS::Abstract*> list)
+    {
+        QScriptEngine engine;
+        QStringList jsonBody;
+
+        for (int i = 0; i < list.length(); ++i) {
+            QVariant objectData = list.at(i)->getData();
+            QScriptValueList args;
+            args.append(engine.toScriptValue(objectData));
+            jsonBody.append(engine.evaluate("JSON.stringify").call(engine.globalObject(), args).toString());
+        }
+
+        _yawner()->putFileContents(name.append(".json"), QString("[%1]").arg(jsonBody.join(",")));
+    }
+
+    QVariantList Manager::_loadStoredObjectList(QString name)
+    {
+        QScriptEngine engine;
+        QVariant objectData = engine.evaluate(
+                QString("(%1)").arg(
+                    _yawner()->getFileContents(name.append(".json")))
+                ).toVariant();
+
+        if (objectData.isValid() && objectData.canConvert(QVariant::List)) {
+            return objectData.toList();
+        }
+        return QVariantList();
+    }
 }

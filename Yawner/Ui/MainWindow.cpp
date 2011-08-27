@@ -48,8 +48,6 @@ namespace YawnerNS {
             _threadWidgets()
         {
             _ui->setupUi(this);
-            _ui->feedView->init();
-            _ui->headWidget->init();
             connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
             //connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
             connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
@@ -99,6 +97,8 @@ namespace YawnerNS {
             }
             else {
                 _yawner->getYammerApi()->setAccessToken(accessToken);
+                _ui->feedView->init();
+                _ui->headWidget->init();
                 connect(
                     _yawner->getMessageManager(),
                     SIGNAL(newMessagesLoaded(QList<int>)),
@@ -130,6 +130,7 @@ namespace YawnerNS {
         MainWindow::~MainWindow()
         {
             delete _ui;
+            delete _yawner;
         }
 
         void MainWindow::requestTokenRecieved(OAuthNS::Token token)
