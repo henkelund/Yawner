@@ -27,6 +27,8 @@
 */
 
 #include "FeedView.h"
+#include <QMovie>
+#include <QScrollBar>
 #include "Yawner.h"
 
 namespace YawnerNS {
@@ -38,14 +40,24 @@ namespace YawnerNS {
                 _messageLayout(0),
                 _messagesWidgets(),
                 _hasChanges(false),
-                _showOlderButton(0)
+                _showOlderLabel(0)
             {
             }
 
             void FeedView::_init()
             {
-                _showOlderButton = findChild<QPushButton*>("showOlderButton");
-                connect(_showOlderButton, SIGNAL(clicked()), this, SLOT(showOlder()));
+                connect(
+                    verticalScrollBar(),
+                    SIGNAL(valueChanged(int)),
+                    this,
+                    SLOT(viewScrolled(int))
+                );
+
+                _showOlderLabel = findChild<QLabel*>("showOlderLabel");
+                _showOlderLabel->setHidden(true);
+                QMovie *spinner = new QMovie(":/blue-loader.gif");
+                spinner->setParent(_showOlderLabel);
+                _showOlderLabel->setMovie(spinner);
 
                 QList<int> messageIds = Yawner::getInstance()->getMessageManager()->getLastLoadIds();
                 if (messageIds.count() > 0) {
@@ -119,6 +131,20 @@ namespace YawnerNS {
                 _hasChanges = true;
                 if (!isHidden()) {
                     _syncLayout();
+                }
+                _showOlderLabel->setHidden(true);
+                _showOlderLabel->movie()->stop();
+            }
+
+            void FeedView::viewScrolled(int value)
+            {
+                if (!_showOlderLabel->isHidden()) {
+                    return;
+                }
+                if (value >= verticalScrollBar()->maximum()) {
+                    _showOlderLabel->setHidden(false);
+                    _showOlderLabel->movie()->start();
+                    showOlder();
                 }
             }
 

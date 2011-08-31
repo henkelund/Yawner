@@ -51,7 +51,8 @@ namespace YawnerNS {
             connect(_ui->feedView, SIGNAL(threadLinkClicked(int)), this, SLOT(showThread(int)));
             //connect(_ui->feedView, SIGNAL(userLinkClicked(int)), this, SLOT(showUser(int)));
             connect(_ui->feedView, SIGNAL(webLinkClicked(QUrl)), this, SLOT(showBrowser(QUrl)));
-            _ui->bodyWidget->showView(_ui->feedView, false);
+            _ui->bodyWidget->showView(_ui->messageView, false);
+            //_ui->bodyWidget->showView(_ui->feedView, false);
             connect(_ui->threadBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
             connect(_ui->userBackButton, SIGNAL(clicked()), this, SLOT(showFeed()));
 
@@ -125,6 +126,8 @@ namespace YawnerNS {
                 connect(timer, SIGNAL(timeout()), this, SLOT(fetchMessages()));
                 timer->start();*/
             }
+            _ui->messageView->scene()->setSceneRect(0, 0, width(), 0);
+            _ui->messageView->init();
         }
 
         MainWindow::~MainWindow()
@@ -216,6 +219,12 @@ namespace YawnerNS {
                 _ui->postSubmit->setIcon(QIcon(QString(":/icon48.png")));
                 _ui->postSubmit->setToolTip(QString("Post to feed"));
             }
+        }
+
+        void MainWindow::resizeEvent(QResizeEvent *event)
+        {
+            QMainWindow::resizeEvent(event);
+            _ui->messageView->setWidth(width());
         }
     }
 }

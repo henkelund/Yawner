@@ -31,7 +31,7 @@
 
 #include "AbstractView.h"
 #include <QBoxLayout>
-#include <QPushButton>
+#include <QLabel>
 #include "../MessageWidget.h"
 
 namespace YawnerNS {
@@ -45,7 +45,7 @@ namespace YawnerNS {
                 QBoxLayout *_messageLayout;
                 QList<YawnerNS::UiNS::MessageWidget*> _messagesWidgets;
                 bool _hasChanges;
-                QPushButton *_showOlderButton;
+                QLabel *_showOlderLabel;
 
                 QBoxLayout* _getMessageLayout();
                 void _syncLayout();
@@ -69,6 +69,7 @@ namespace YawnerNS {
 
             public slots:
                 void newMessagesLoaded(QList<int> messageIds);
+                void viewScrolled(int value);
                 void showOlder();
                 void messageThreadLinkClicked(int threadId);
                 void messageUserLinkClicked(int userId);

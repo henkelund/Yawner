@@ -68,7 +68,7 @@ namespace YawnerNS {
             if (!messages.isEmpty()) {
                 updateMessagesData(messages);
                 if (_messageIndex.count() > 0) {
-                    requestMessages(NewerThan, getNewestMessage()->getId());
+                    //requestMessages(NewerThan, getNewestMessage()->getId());
                 }
                 else {
                     requestMessages();

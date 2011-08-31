@@ -32,7 +32,11 @@ QPushButton#threadBackButton {
     min-height: 24px;
 }
 QWidget#bodyWidget { background: rgb(0, 139, 158); }
-QScrollArea#feedView, QScrollArea#threadView, QScrollArea#userView { background: rgb(0, 139, 158); }
+QScrollArea#feedView, 
+QScrollArea#threadView, 
+QScrollArea#userView, 
+#messageView, 
+#messageGraphicsView { background: rgb(0, 139, 158); }
 QStatusBar { 
     border-top: 1px solid #242424; 
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #363636, stop: 1 #242424);

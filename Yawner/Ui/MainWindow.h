@@ -56,6 +56,9 @@ namespace YawnerNS {
             Yawner *_yawner;
             QList<MessageWidget*> _threadWidgets;
 
+        protected:
+            void resizeEvent(QResizeEvent *event);
+
         public slots:
             void showThread(int threadId);
             void showUser(int userId);
